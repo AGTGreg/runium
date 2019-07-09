@@ -7,6 +7,7 @@ import traceback
 import threading
 from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
+from multiprocessing.pool import ThreadPool
 from runium.util import get_seconds
 
 
@@ -15,8 +16,9 @@ class Runium(object):
     This is the main class that gets instantiated by the user.
     """
 
-    def __init__(self):
+    def __init__(self, workers=None):
         self.tasks = {}
+        self.pool = ThreadPool(workers)
 
     def run(self, task, every=None, times=None, **kwargs):
         """
@@ -43,30 +45,14 @@ class Runium(object):
             "times": times
         }
 
-        # # With an executor
-        # future = None
-        # executor = ThreadPoolExecutor(max_workers=5)
-
-        # # with ThreadPoolExecutor(max_workers=5) as executor:
-        # future = executor.submit(
-        #     self.__loop,
-        #     current_task['task'], current_task['kwargs'],
-        #     current_task['interval'], current_task['times']
-        # )
-        # executor.shutdown(wait=False)
-        # return future.result()
-
-        # With simple threads
-        task_th = threading.Thread(
-            target=self.__loop, args=(
+        future = self.pool.apply_async(
+            self.__loop, args=(
                 current_task['task'], current_task['kwargs'],
                 current_task['interval'], current_task['times']
-            ))
-        task_th.start()
-
-        current_task['thread'] = task_th
-        self.tasks[task_th.ident] = current_task
-        return task_th
+            )
+        )
+        self.tasks[future._job] = current_task
+        return future
 
     def __loop(self, task, kwargs, interval, times):
         """
