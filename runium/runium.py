@@ -5,6 +5,8 @@ This is the main module.
 import time
 import traceback
 from multiprocessing.pool import ThreadPool
+import concurrent
+from concurrent.futures import ThreadPoolExecutor, wait
 from runium.util import get_seconds
 
 
@@ -16,6 +18,8 @@ class Runium(object):
     def __init__(self, workers=None):
         self.tasks = {}
         self.pool = ThreadPool(workers)
+        self._executor = ThreadPoolExecutor(workers)
+        self.futures = []
 
     def run(self, task, every=None, times=None, start_in=0, **kwargs):
         """
@@ -43,14 +47,14 @@ class Runium(object):
             "start_in": get_seconds(start_in)
         }
 
-        future = self.pool.apply_async(
-            self.__loop, args=(
-                current_task['task'], current_task['kwargs'],
-                current_task['interval'], current_task['times'],
-                current_task['start_in']
-            )
+        future = self._executor.submit(
+            self.__loop,
+            current_task['task'], current_task['kwargs'],
+            current_task['interval'], current_task['times'],
+            current_task['start_in']
         )
-        self.tasks[future._job] = current_task
+        self.futures.append(future)
+
         return future
 
     def __loop(self, task, kwargs, interval, times, start_in):

@@ -18,14 +18,13 @@ def t_exep():
 
 if __name__ == "__main__":
     rn = Runium()
-    # r1 = rn.run(t_task, kwargs={'msg': 'r1'})
-    # r2 = rn.run(t_task, kwargs={'msg': 'r2'}, every='1 second', times=3)
-    # r3 = rn.run(t_task, kwargs={'msg': 'r3'}, start_in='5 seconds')
+    r1 = rn.run(t_task, kwargs={'msg': 'r1'}, start_in='5 seconds')
+    r2 = rn.run(t_task, kwargs={'msg': 'r2'}, every='1 second', times=3)
+    r3 = rn.run(t_task, kwargs={'msg': 'r3'})
+    # re = rn.run(t_exep)
 
-    # print('==> r1:', r1.get())
-    # print('==> r2:', r2.get())
-    # print('==> r3:', r3.get())
-
-    re = rn.run(t_exep)
-    t_exep.wait()
-    print(t_exep.successful())
+    # time.sleep(10)
+    print(r1.result())
+    print('==> r2:', r2)
+    print('==> r3:', r3)
+    # print(t_exep.result())
