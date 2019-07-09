@@ -4,9 +4,6 @@ This is the main module.
 
 import time
 import traceback
-import threading
-from concurrent import futures
-from concurrent.futures import ThreadPoolExecutor
 from multiprocessing.pool import ThreadPool
 from runium.util import get_seconds
 
@@ -20,10 +17,10 @@ class Runium(object):
         self.tasks = {}
         self.pool = ThreadPool(workers)
 
-    def run(self, task, every=None, times=None, **kwargs):
+    def run(self, task, every=None, times=None, start_in=0, **kwargs):
         """
-        Runs the task in a new thread and adds it to the tasks dict. Key is the
-        thread's ID.
+        Runs the task asynchronously in its own thread and adds it to the
+        tasks dict. Key is the thread's ID.
         """
         try:
             task_args = kwargs['kwargs']
@@ -42,27 +39,32 @@ class Runium(object):
             "task": task,
             'kwargs': task_args,
             "interval": get_seconds(every),
-            "times": times
+            "times": times,
+            "start_in": get_seconds(start_in)
         }
 
         future = self.pool.apply_async(
             self.__loop, args=(
                 current_task['task'], current_task['kwargs'],
-                current_task['interval'], current_task['times']
+                current_task['interval'], current_task['times'],
+                current_task['start_in']
             )
         )
         self.tasks[future._job] = current_task
         return future
 
-    def __loop(self, task, kwargs, interval, times):
+    def __loop(self, task, kwargs, interval, times, start_in):
         """
         Runs a task every (interval) seconds for (times) times.
         If times is set to 0 it loops indefinitely.
-        Passes the stats and any **kwargs the task may have.
         """
-        next_time = time.time() + interval
         loop_count = 0
         task_result = None
+
+        if start_in > 0:
+            time.sleep(start_in)
+
+        next_time = time.time() + interval
         while True:
             loop_count += 1
             task_result = self.__run_task(task, kwargs=kwargs)
