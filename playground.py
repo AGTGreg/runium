@@ -13,6 +13,12 @@ def add():
     return some_data
 
 
+def a_callback(future_result):
+    time.sleep(0.5)
+    print('==> Callback called.')
+    print('==> This is the result we have:', future_result.result())
+
+
 def t_task(msg, **kwargs):
     # sleep_for = round(random.uniform(0, 1), 2)
     sleep_for = 1
@@ -28,13 +34,10 @@ def t_exep():
 
 if __name__ == "__main__":
     rn = Runium()
-    r1 = rn.run(t_task, kwargs={'msg': 'R1'})
-    r2 = rn.run(t_task, kwargs={'msg': 'R2'})
-
+    r1 = rn.run(t_task, kwargs={'msg': 'R1'}, callback=a_callback)
+    # r2 = rn.run(t_task, kwargs={'msg': 'R2'})
     print(r1)
     print(r1.thread)
-    print(r1.running())
+    print('==> Is running:', r1.running())
     print(r1.result())
-    print(r1.running())
-
-    print(r2.thread)
+    print('==> Is running:', r1.running())

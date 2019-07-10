@@ -8,7 +8,7 @@ You can add new tasks as you please, choose when and how to execute them and con
 The main purpose of Runium is to make all these as clean and simple as possible. For example:
 ```python 
 # Run a task concurrently every 10 seconds.
-runium.run(task, every=10)
+runium.run(task, every='10 seconds')
 ```
 Interested? Read on!
 

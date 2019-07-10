@@ -19,15 +19,23 @@ class Runium(object):
         self.tasks = {}
         self._executor = ThreadPoolExecutor(workers)
 
-    def run(self, task, every=None, times=None, start_in=0, kwargs={}):
+    def run(
+        self, task, every=None, times=None, start_in=0, callback=None,
+        kwargs={}
+    ):
         """
-        Runs the task asynchronously in its own thread and adds it to the
-        tasks dict with a unique UUID.
+        Creates a new Task, adds it to the tasks list and submits it to the
+        PoolExecutor.
+        Returns the Task object.
         """
         every, times = self.__set_every_times_defaults(every, times)
-        current_task = Task(task, kwargs, every, times, start_in)
+        current_task = Task(task, kwargs, every, times, start_in, callback)
+
         future = self._executor.submit(self.__loop, current_task)
         current_task.future = future
+        if callback is not None:
+            current_task.add_done_callback(callback)
+
         self.tasks[current_task.id] = current_task
         return current_task
 
@@ -81,32 +89,31 @@ class Runium(object):
         except KeyError:
             pass
 
-    def __get_stats(self, loop_count, max_loops, now):
-        stats = {}
-        stats['loop_count'] = loop_count
-        stats['now'] = now
-        try:
-            stats['loops_remaining'] = (loop_count - max_loops) * (-1)
-        except TypeError:
-            stats['loops_remaining'] = None
-        return stats
-
 
 class Task(object):
-    def __init__(self, fn, arguments, interval, times, start_in):
+    """
+    This object represents the method that Runium runs.
+    Every time we tell Runnium to run a method, it creates and returns a Task
+    object.
+    It contains usefull data and methods for Runium and the users and exposes
+    some of the future and functionallity and the current Thread.
+    """
+
+    def __init__(self, fn, arguments, interval, times, start_in, callback):
         self.id = uuid.uuid1().int
         self.fn = fn
         self.arguments = arguments,
         self.interval = get_seconds(interval)
         self.times = times
         self.start_in = get_seconds(start_in)
+        self.callback = callback
         self.future = None
         self.thread = None
 
     def run(self):
         """
-        Runs the task. Do not call this method.
-        This method is called by Runium internally.
+        Runs the task. This is a blocking operation. Do not call this method.
+        It is called by Runium internally.
         """
         kwargs = self.arguments[0]
         self.thread = threading.current_thread()
