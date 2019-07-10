@@ -29,7 +29,7 @@ class Runium(object):
         future = self._executor.submit(self.__loop, current_task)
         current_task.future = future
         self.tasks[current_task.id] = current_task
-        return future
+        return current_task
 
     def __loop(self, task):
         """
@@ -101,15 +101,96 @@ class Task(object):
         self.times = times
         self.start_in = get_seconds(start_in)
         self.future = None
+        self.thread = None
 
     def run(self):
         """
-        Runs the task. This is called in the loop.
+        Runs the task. Do not call this method.
+        This method is called by Runium internally.
         """
+        kwargs = self.arguments[0]
+        self.thread = threading.current_thread()
         try:
-            result = self.fn(**self.arguments[0])
+            result = self.fn(**kwargs)
         except Exception as err:
             traceback.print_exc()
             return err
         else:
             return result
+
+    # The following methods are wrappers for the future object.
+    def cancel(self):
+        """
+        Attempt to cancel the call. If the call is currently being executed or
+        finished running and cannot be cancelled then the method will return
+        False, otherwise the call will be cancelled and the method will return
+        True.
+        """
+        return self.future.cancel()
+
+    def cancelled(self):
+        """
+        Return True if the call was successfully cancelled.
+        """
+        return self.future.cancelled()
+
+    def running(self):
+        """
+        Return True if the call is currently being executed and cannot be
+        cancelled.
+        """
+        return self.future.running()
+
+    def done(self):
+        """
+        Return True if the call was successfully cancelled or finished running.
+        """
+        return self.future.done()
+
+    def result(self, timeout=None):
+        """
+        Return the value returned by the call. If the call hasn’t yet completed
+        then this method will wait up to timeout seconds. If the call hasn’t
+        completed in timeout seconds, then a concurrent.futures.TimeoutError
+        will be raised. timeout can be an int or float. If timeout is not
+        specified or None, there is no limit to the wait time.
+
+        If the future is cancelled before completing then CancelledError will
+        be raised.
+
+        If the call raised, this method will raise the same exception.
+        """
+        return self.future.result(timeout)
+
+    def exception(self, timeout=None):
+        """
+        Return the exception raised by the call. If the call hasn’t yet
+        completed then this method will wait up to timeout seconds. If the call
+        hasn’t completed in timeout seconds, then a
+        concurrent.futures.TimeoutError will be raised. timeout can be an int
+        or float. If timeout is not specified or None, there is no limit to the
+        wait time.
+
+        If the future is cancelled before completing then CancelledError will
+        be raised.
+
+        If the call completed without raising, None is returned.
+        """
+        return self.future.exception(timeout)
+
+    def add_done_callback(self, fn):
+        """
+        Attaches the callable fn to the future. fn will be called, with the
+        future as its only argument, when the future is cancelled or finishes
+        running.
+
+        Added callables are called in the order that they were added and are
+        always called in a thread belonging to the process that added them. If
+        the callable raises an Exception subclass, it will be logged and
+        ignored. If the callable raises a BaseException subclass, the behavior
+        is undefined.
+
+        If the future has already completed or been cancelled, fn will be
+        called immediately.
+        """
+        return self.future.add_done_callback(fn)

@@ -19,7 +19,7 @@ def t_task(msg, **kwargs):
     print('==>', time.time(), msg, 'Running')
     time.sleep(sleep_for)
     print('==>', msg, 'Finished')
-    return "==>{} returns.".format(msg)
+    return "==> {} returns.".format(msg)
 
 
 def t_exep():
@@ -28,32 +28,13 @@ def t_exep():
 
 if __name__ == "__main__":
     rn = Runium()
-    r1 = rn.run(t_task, kwargs={'msg': 'r1'}, every=1, times=2)
-    # print(r1)
-    r2 = rn.run(t_task, kwargs={'msg': 'r2'}, every='1 second', times=3)
-    r3 = rn.run(t_task, kwargs={'msg': 'r3'})
-    r4 = rn.run(add)
+    r1 = rn.run(t_task, kwargs={'msg': 'R1'})
+    r2 = rn.run(t_task, kwargs={'msg': 'R2'})
 
-    # re = rn.run(t_exep, every='1 second', times=3)
-
-    print('==> Runium tasks:')
-    for ti, td in rn.tasks.items():
-        print(ti, td)
-
+    print(r1)
+    print(r1.thread)
+    print(r1.running())
     print(r1.result())
-    # print('==> re:')
-    # print(re.result())
+    print(r1.running())
 
-    # print('==> Runium tasks:')
-    # for ti, td in rn.tasks.items():
-    #     print(ti, td)
-
-    # print('==> r2:', r2)
-    # print('==> r3:', r3)
-    # print(t_exep.result())
-
-    # print(some_data)
-    # rn.run(add)
-    # rn.run(add)
-    # rn.run(add, every='1 second', times=5).result()
-    # print(some_data)
+    print(r2.thread)
