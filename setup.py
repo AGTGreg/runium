@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="runium",
-    version="0.0.1",
+    version="0.1.0",
     author="Grigoris Chatzinikolaou",
     author_email="greghatzis@gmail.com",
     description="Clean and simple task concurrency",
