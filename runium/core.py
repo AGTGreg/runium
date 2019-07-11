@@ -45,7 +45,6 @@ class Runium(object):
         times.
         If times is set to 0 it loops indefinitely.
         """
-        loop_count = 0
         task_result = None
         interval = task.interval
 
@@ -54,9 +53,9 @@ class Runium(object):
 
         next_time = time.time() + interval
         while True:
-            loop_count += 1
+            task.runs_count += 1
             task_result = task.run()
-            if task.times > 0 and loop_count >= task.times:
+            if task.times > 0 and task.runs_count >= task.times:
                 break
             # Skip tasks if we are behind schedule:
             next_time +=\
@@ -113,6 +112,7 @@ class Task(object):
         self.callback = None
         self.future = None
         self.thread = None
+        self.runs_count = 0
 
     def run(self):
         """
@@ -128,7 +128,9 @@ class Task(object):
                 result = self.fn(**kwargs)
             except Exception as err:
                 traceback.print_exc()
-                self.future.set_exception(err)
+                # Will try to add this later since it gives wrong results to 
+                # the callback.
+                # self.future.set_exception(err)
                 result = err
             finally:
                 return result

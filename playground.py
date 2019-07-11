@@ -27,8 +27,8 @@ def b_callback(future):
     if future.exception():
         print('==> The task has failed.')
         print('==> Exception:')
-        print(future.result())
-        # print(future.exception())
+        # print(future.result())
+        print(future.exception())
     else:
         print('==> The task was successful.')
         print(future.result())
@@ -41,7 +41,7 @@ def task_time():
 
 def task_args(msg, **kwargs):
     print('==>', msg, 'Running')
-    time.sleep(1)
+    time.sleep('1')
     print('==>', msg, 'Finished')
     return "task_args return msg: {}".format(msg)
 
@@ -62,9 +62,10 @@ if __name__ == "__main__":
         task_args, kwargs={'msg': 'R1'}, every='1 seconds', times=3,
         exit_on_exception=False
     )
-    r1.when_finished(b_callback)
+    # r1.when_finished(b_callback)
 
-    # print(r1)
+    print(r1.result())
+    print(r1.runs_count)
     # print(r1.thread)
     # print('==> Is running:', r1.running())
     # print(r1.result())
