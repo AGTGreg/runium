@@ -1,6 +1,6 @@
 import random
 import time
-from runium.runium import Runium
+from runium.core import Runium
 
 some_data = 0
 
