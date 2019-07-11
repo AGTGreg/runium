@@ -28,7 +28,7 @@ class TestGetSeconds(object):
     def test_invalid_scale_string(self):
         pytest.raises(ValueError, get_seconds, '10 months')
 
-    def test_invalid_value(self):
+    def test_invalid_type(self):
         pytest.raises(TypeError, get_seconds, [10])
 
     def test_none(self):
