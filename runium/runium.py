@@ -15,13 +15,13 @@ class Runium(object):
     This is the main class that gets instantiated by the user.
     """
 
-    def __init__(self, workers=None):
+    def __init__(self, concurrency_mode='threads', workers=None):
         self.tasks = {}
         self._executor = ThreadPoolExecutor(workers)
 
     def run(
-        self, task, every=None, times=None, start_in=0, callback=None,
-        kwargs={}
+        self, task, every=None, times=None, start_in=0,
+        kwargs={}, exit_on_exception=True
     ):
         """
         Creates a new Task, adds it to the tasks list and submits it to the
@@ -29,19 +29,20 @@ class Runium(object):
         Returns the Task object.
         """
         every, times = self.__set_every_times_defaults(every, times)
-        current_task = Task(task, kwargs, every, times, start_in, callback)
+        current_task = Task(
+            task, kwargs, every, times, start_in, exit_on_exception
+        )
 
         future = self._executor.submit(self.__loop, current_task)
         current_task.future = future
-        if callback is not None:
-            current_task.add_done_callback(callback)
 
         self.tasks[current_task.id] = current_task
         return current_task
 
     def __loop(self, task):
         """
-        Runs a task every (interval) seconds for (times) times.
+        Runs a task in :start_in seconds, every :interval seconds for :times
+        times.
         If times is set to 0 it loops indefinitely.
         """
         loop_count = 0
@@ -92,21 +93,24 @@ class Runium(object):
 
 class Task(object):
     """
-    This object represents the method that Runium runs.
+    This object represents the method that is beeing run by Runium.
     Every time we tell Runnium to run a method, it creates and returns a Task
     object.
     It contains usefull data and methods for Runium and the users and exposes
-    some of the future and functionallity and the current Thread.
+    the future and the current Thread objects.
     """
 
-    def __init__(self, fn, arguments, interval, times, start_in, callback):
+    def __init__(
+        self, fn, arguments, interval, times, start_in, exit_on_exception
+    ):
         self.id = uuid.uuid1().int
         self.fn = fn
         self.arguments = arguments,
         self.interval = get_seconds(interval)
         self.times = times
         self.start_in = get_seconds(start_in)
-        self.callback = callback
+        self.exit_on_exception = exit_on_exception
+        self.callback = None
         self.future = None
         self.thread = None
 
@@ -117,13 +121,19 @@ class Task(object):
         """
         kwargs = self.arguments[0]
         self.thread = threading.current_thread()
-        try:
-            result = self.fn(**kwargs)
-        except Exception as err:
-            traceback.print_exc()
-            return err
+
+        if self.exit_on_exception is False:
+            result = None
+            try:
+                result = self.fn(**kwargs)
+            except Exception as err:
+                traceback.print_exc()
+                self.future.set_exception(err)
+                result = err
+            finally:
+                return result
         else:
-            return result
+            return self.fn(**kwargs)
 
     # The following methods are wrappers for the future object.
     def cancel(self):
@@ -185,11 +195,11 @@ class Task(object):
         """
         return self.future.exception(timeout)
 
-    def add_done_callback(self, fn):
+    def when_finished(self, callback):
         """
-        Attaches the callable fn to the future. fn will be called, with the
-        future as its only argument, when the future is cancelled or finishes
-        running.
+        Attaches the callback onto the future. callback will be called, with
+        the future as its only argument, every time the future is cancelled or
+        finishes running.
 
         Added callables are called in the order that they were added and are
         always called in a thread belonging to the process that added them. If
@@ -197,7 +207,9 @@ class Task(object):
         ignored. If the callable raises a BaseException subclass, the behavior
         is undefined.
 
-        If the future has already completed or been cancelled, fn will be
+        If the future has already completed or been cancelled, callback will be
         called immediately.
         """
-        return self.future.add_done_callback(fn)
+        self.callback = callback
+        self.future.add_done_callback(callback)
+        return self

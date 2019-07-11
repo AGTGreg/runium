@@ -13,19 +13,37 @@ def add():
     return some_data
 
 
-def a_callback(future_result):
+def a_callback(future):
     time.sleep(0.5)
     print('==> Callback called.')
-    print('==> This is the result we have:', future_result.result())
+    print('==> Exception:')
+    print(future.exception())
+    print('==> Result:')
+    print(future.result())
 
 
-def t_task(msg, **kwargs):
-    # sleep_for = round(random.uniform(0, 1), 2)
-    sleep_for = 1
-    print('==>', time.time(), msg, 'Running')
-    time.sleep(sleep_for)
+def b_callback(future):
+    print('==> b_callback initiated.')
+    if future.exception():
+        print('==> The task has failed.')
+        print('==> Exception:')
+        print(future.result())
+        # print(future.exception())
+    else:
+        print('==> The task was successful.')
+        print(future.result())
+
+
+def task_time():
+    print(time.time())
+    time.sleep(0.5)
+
+
+def task_args(msg, **kwargs):
+    print('==>', msg, 'Running')
+    time.sleep(1)
     print('==>', msg, 'Finished')
-    return "==> {} returns.".format(msg)
+    return "task_args return msg: {}".format(msg)
 
 
 def t_exep():
@@ -34,10 +52,20 @@ def t_exep():
 
 if __name__ == "__main__":
     rn = Runium()
-    r1 = rn.run(t_task, kwargs={'msg': 'R1'}, callback=a_callback)
-    # r2 = rn.run(t_task, kwargs={'msg': 'R2'})
-    print(r1)
-    print(r1.thread)
-    print('==> Is running:', r1.running())
-    print(r1.result())
-    print('==> Is running:', r1.running())
+    # r1 = rn.run_thread()
+    # r1 = rn.run(task, mode='thread')
+    # r1 = rn.run(task_args, kwargs={'msg': 'R1'}, callback=a_callback)
+    # r2 = rn.run(task, kwargs={'msg': 'R2'})
+    # r1 = rn.run(task_time, every='1 seconds', times=5).then(a_callback)
+
+    r1 = rn.run(
+        task_args, kwargs={'msg': 'R1'}, every='1 seconds', times=3,
+        exit_on_exception=False
+    )
+    r1.when_finished(b_callback)
+
+    # print(r1)
+    # print(r1.thread)
+    # print('==> Is running:', r1.running())
+    # print(r1.result())
+    # print('==> Is running:', r1.running())
