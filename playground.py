@@ -59,8 +59,7 @@ if __name__ == "__main__":
     # r1 = rn.run(task_time, every='1 seconds', times=5).then(a_callback)
 
     r1 = rn.run(
-        task_args, kwargs={'msg': 'R1'}, every='1 seconds', times=3,
-        exit_on_exception=False
+        task_args, kwargs={'msg': 'R1'}, times=3, exit_on_exception=False
     )
     # r1.when_finished(b_callback)
 

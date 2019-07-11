@@ -58,9 +58,10 @@ class Runium(object):
             if task.times > 0 and task.runs_count >= task.times:
                 break
             # Skip tasks if we are behind schedule:
-            next_time +=\
-                (time.time() - next_time) // interval * interval + interval
-            time.sleep(max(0, next_time - time.time()))
+            if interval > 0:
+                next_time +=\
+                    (time.time() - next_time) // interval * interval + interval
+                time.sleep(max(0, next_time - time.time()))
 
         self.__remove_task_from_list(task.id)
         return task_result
@@ -80,7 +81,7 @@ class Runium(object):
         elif every is not None and times is None:
             times = 0
         elif every is None and times is not None:
-            every = 0.01
+            every = 0
         return every, times
 
     def __remove_task_from_list(self, task_id):
