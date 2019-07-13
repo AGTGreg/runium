@@ -6,6 +6,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import threading
+import atexit
 from runium.util import get_seconds
 
 
@@ -22,6 +23,8 @@ class Runium(object):
             self._executor = ProcessPoolExecutor(self.workers)
         else:
             self._executor = ThreadPoolExecutor(self.workers)
+
+        atexit.register(self._executor.shutdown)
 
     def run(
         self, task, every=None, times=None, start_in=0,
@@ -84,7 +87,7 @@ def _run_task(
     while True:
         runs_count += 1
         # TODO methods with no **kwargs will raise TypeError.
-        kwargs['runs_count'] = runs_count
+        # kwargs['runs_count'] = runs_count
 
         # The actual execution of the task takes place here.
         if exit_on_exception is False:
