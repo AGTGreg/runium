@@ -111,6 +111,6 @@ def _make_runium_param(iterations, times):
     """
     context = {
         'iterations': iterations,
-        'iterations_remaining': iterations - times
+        'iterations_remaining': times - iterations
     }
     return context

@@ -52,6 +52,7 @@ def task_args(msg, **kwargs):
 
 
 def task_stats(runium, **kwargs):
+    print(runium['iterations'], runium['iterations_remaining'])
     return runium
 
 
