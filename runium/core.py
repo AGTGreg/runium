@@ -3,9 +3,8 @@ This is the main module.
 """
 
 import time
-import traceback
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-import threading
+from inspect import signature
 import atexit
 from runium.util import get_seconds
 
@@ -27,8 +26,8 @@ class Runium(object):
         atexit.register(self._executor.shutdown)
 
     def run(
-        self, task, every=None, times=None, start_in=0,
-        kwargs={}, callback=None, exit_on_exception=True
+        self, task, every=None, times=None, start_in=0, kwargs={},
+        callback=None
     ):
         """
         Creates a new Task, adds it to the tasks list and submits it to the
@@ -41,7 +40,7 @@ class Runium(object):
 
         future = self._executor.submit(
             _run_task,
-            task, every, times, start_in, kwargs, exit_on_exception
+            task, every, times, start_in, kwargs
         )
 
         if callback is not None:
@@ -68,9 +67,7 @@ class Runium(object):
         return every, times
 
 
-def _run_task(
-    fn, interval, times, start_in, kwargs, exit_on_exception=True
-):
+def _run_task(fn, interval, times, start_in, kwargs):
     """
     Runs the task, optionally for :times every :every seconds in :start_in
     seconds.
@@ -78,28 +75,24 @@ def _run_task(
     Process.
     """
     task_result = None
-    runs_count = 0
+    iterations = 0
 
     if start_in > 0:
         time.sleep(start_in)
 
     next_time = time.time() + interval
     while True:
-        runs_count += 1
-        # TODO methods with no **kwargs will raise TypeError.
-        # kwargs['runs_count'] = runs_count
+        iterations += 1
 
-        # The actual execution of the task takes place here.
-        if exit_on_exception is False:
-            try:
-                task_result = fn(**kwargs)
-            except Exception as err:
-                traceback.print_exc()
-                task_result = err
-        else:
-            task_result = fn(**kwargs)
+        # Runium will pass some stats and functions in the callable's runium
+        # attribute.
+        if 'runium' in signature(fn).parameters.keys():
+            kwargs['runium'] = _make_runium_param(iterations, times)
 
-        if times > 0 and runs_count >= times:
+        kwargs['runium'] = _make_runium_param(iterations, times)
+        task_result = fn(**kwargs)
+
+        if times > 0 and iterations >= times:
             break
 
         # Skip tasks if we are behind schedule:
@@ -109,3 +102,15 @@ def _run_task(
             time.sleep(max(0, next_time - time.time()))
 
     return task_result
+
+
+def _make_runium_param(iterations, times):
+    """
+    Creates and returns a dict with runium specific stats and functions that
+    can be accessed from within the task.
+    """
+    context = {
+        'iterations': iterations,
+        'iterations_remaining': iterations - times
+    }
+    return context

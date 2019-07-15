@@ -51,6 +51,10 @@ def task_args(msg, **kwargs):
     return "task_args return msg: {}".format(msg)
 
 
+def task_stats(runium, **kwargs):
+    return runium
+
+
 def t_exep():
     raise Exception('This is a test exception.')
 
@@ -59,10 +63,13 @@ if __name__ == "__main__":
     rnp = Runium(concurrency_mode="multiprocessing")
     rnt = Runium()
 
-    rp1 = rnp.run(
-        simple_task, callback=b_callback
-    ).result()
-    rt1 = rnt.run(task_args, kwargs={'msg': 'RT1'}).result()
+    rnp1 = rnp.run(task_stats, times=10).result()
+    print(rnp1)
+
+    # rp1 = rnp.run(
+    #     task_args, kwargs={'msg': 'RT1'}, callback=b_callback
+    # ).result()
+    # rt1 = rnt.run(task_args, kwargs={'msg': 'RT1'}).result()
 
     # r1 = rn.run(task_args, kwargs={'msg': 'R1'}, callback=a_callback)
     # r2 = rn.run(task, kwargs={'msg': 'R2'})
