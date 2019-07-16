@@ -89,7 +89,6 @@ def _run_task(fn, interval, times, start_in, kwargs):
         if 'runium' in signature(fn).parameters.keys():
             kwargs['runium'] = _make_runium_param(iterations, times)
 
-        kwargs['runium'] = _make_runium_param(iterations, times)
         task_result = fn(**kwargs)
 
         if times > 0 and iterations >= times:
