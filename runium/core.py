@@ -6,6 +6,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from inspect import signature
 import atexit
+import uuid
 from runium.util import get_seconds
 
 
@@ -14,20 +15,24 @@ class Runium(object):
     This is the main class that gets instantiated by the user.
     """
 
-    def __init__(self, concurrency_mode='multithreading', workers=None):
-        self.tasks = {}
+    def __init__(self, mode='multithreading', workers=None):
+        self.__tasks_list = {}
         self.workers = workers
-        self.concurrency_mode = concurrency_mode
-        if self.concurrency_mode == 'multiprocessing':
+        self.mode = mode
+        if self.mode == 'multiprocessing':
             self._executor = ProcessPoolExecutor(self.workers)
-        else:
+        elif self.mode == "multithreading":
             self._executor = ThreadPoolExecutor(self.workers)
+        else:
+            raise ValueError(
+                'mode can only be multiprocessing or multithreading.'
+            )
 
         atexit.register(self._executor.shutdown)
 
     def run(
         self, task, every=None, times=None, start_in=0, kwargs={},
-        callback=None
+        callbacks=None
     ):
         """
         Creates a new Task, adds it to the tasks list and submits it to the
@@ -38,15 +43,38 @@ class Runium(object):
         start_in = get_seconds(start_in)
         every, times = self.__set_every_times_defaults(every, times)
 
+        task_id = uuid.uuid4().int
         future = self._executor.submit(
             _run_task,
-            task, every, times, start_in, kwargs
+            task, task_id, every, times, start_in, kwargs
         )
 
-        if callback is not None:
-            future.add_done_callback(callback)
+        current_task = _Task(task_id, future, callbacks)
+        self.__add_task_to_tasks_list(current_task)
 
-        return future
+        return current_task
+
+    def __add_task_to_tasks_list(self, task):
+        self.__tasks_list[task.id] = task
+
+    def __remove_task_from_tasks_list(self, task_id):
+        try:
+            del self.__tasks_list[task_id]
+        except KeyError:
+            pass
+
+    def tasks(self):
+        """
+        Cleans up and returns the tasks list.
+        """
+        tasks_to_remove = []
+        for task_id, task in self.__tasks_list.items():
+            if task.future.done() is True:
+                tasks_to_remove.append(task_id)
+        for t_id in tasks_to_remove:
+            self.__remove_task_from_tasks_list(t_id)
+
+        return self.__tasks_list
 
     def __set_every_times_defaults(self, every, times):
         """
@@ -67,7 +95,7 @@ class Runium(object):
         return every, times
 
 
-def _run_task(fn, interval, times, start_in, kwargs):
+def _run_task(fn, id, interval, times, start_in, kwargs):
     """
     Runs the task, optionally for :times every :every seconds in :start_in
     seconds.
@@ -113,3 +141,35 @@ def _make_runium_param(iterations, times):
         'iterations_remaining': times - iterations
     }
     return context
+
+
+class _Task(object):
+    """
+    This object represents the task that will be executed by Runium.
+    It encapsulates the future object.
+    """
+    def __init__(self, id, future, callbacks):
+        self.id = id
+        self.future = future
+        self.callbacks = callbacks
+        self.then_run(callbacks)
+
+    def then_run(self, callbacks):
+        """
+        Attach one or a list of callbacks to the task. If the task is finished
+        the callbacks wi be executed imidiately in the order they are
+        submitted.
+        """
+        if callbacks is not None:
+            if isinstance(callbacks, list):
+                for c in callbacks:
+                    self.future.add_done_callback(c)
+            else:
+                self.future.add_done_callback(callbacks)
+        return self
+
+    def result(self, timeout=None):
+        return self.future.result(timeout)
+
+    def get_state(self):
+        return self.future._state

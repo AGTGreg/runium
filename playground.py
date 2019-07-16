@@ -61,11 +61,16 @@ def t_exep():
 
 
 if __name__ == "__main__":
-    rnp = Runium(concurrency_mode="multiprocessing")
+    rnp = Runium(mode="multiprocessing")
     rnt = Runium()
 
-    rnp1 = rnp.run(task_stats, times=10).result()
-    print(rnp1)
+    rnp1 = rnp.run(simple_task, times=10).then_run([a_callback, b_callback])
+    print(rnp1.future.done())
+    print(rnp1.result())
+    print(rnp1.get_state())
+
+    for task in rnp.tasks().items():
+        print(task)
 
     # rp1 = rnp.run(
     #     task_args, kwargs={'msg': 'RT1'}, callback=b_callback
