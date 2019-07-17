@@ -20,7 +20,7 @@ setup(
     author="Grigoris Chatzinikolaou",
     author_email="greghatzis@gmail.com",
     description="Clean and simple task concurrency for Python.",
-    long_description=read_file('README.rst'),
+    long_description=read_file('README.md'),
     keywords=[
         'concurrecy', 'asynchonous', 'tasks', 'scheduling', 'scheduler',
         'cron', 'multiprocessing', 'multithreading', 'callbacks',
