@@ -20,6 +20,14 @@ def get_seconds(interval):
             raise ValueError(
                 "Valid time scales are: {}".format(list(TIME_SCALES.keys()))
             )
+        except ValueError:
+            raise ValueError(
+                '''
+                Invalid format in time scale. It must include an integer
+                followed by a string.
+                Try a format like this: '1 minute'.
+                '''
+            )
         else:
             return seconds
 

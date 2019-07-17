@@ -40,8 +40,9 @@ def b_callback(future):
 
 
 def task_time():
-    print(time.time())
-    time.sleep(0.5)
+    sleep_for = random.uniform(0.1, 0.9)
+    print(time.time(), ' --sleeping for:', sleep_for)
+    time.sleep(sleep_for)
 
 
 def task_args(msg, **kwargs):
@@ -64,31 +65,10 @@ if __name__ == "__main__":
     rnp = Runium(mode="multiprocessing")
     rnt = Runium()
 
-    rnp1 = rnp.run(simple_task, times=10).then_run([a_callback, b_callback])
-    print(rnp1.future.done())
-    print(rnp1.result())
-    print(rnp1.get_state())
-
-    for task in rnp.tasks().items():
-        print(task)
-
-    # rp1 = rnp.run(
-    #     task_args, kwargs={'msg': 'RT1'}, callback=b_callback
-    # ).result()
-    # rt1 = rnt.run(task_args, kwargs={'msg': 'RT1'}).result()
-
-    # r1 = rn.run(task_args, kwargs={'msg': 'R1'}, callback=a_callback)
-    # r2 = rn.run(task, kwargs={'msg': 'R2'})
-    # r1 = rn.run(task_time, every='1 seconds', times=5).then(a_callback)
-
-    # r1 = rn.run(
-    #     task_args, kwargs={'msg': 'R1'}, times=3, exit_on_exception=False
-    # )
-    # r1.when_finished(b_callback)
-
-    # print(r1.result())
-    # print(r1.runs_count)
-    # print(r1.thread)
-    # print('==> Is running:', r1.running())
-    # print(r1.result())
-    # print('==> Is running:', r1.running())
+    rnt.run(simple_task, times=10).result()
+    rnt.run(simple_task).result()
+    rnt.run(task_stats).result()
+    rnt.run(simple_task, every='1 second', times=5, start_in=1).result()
+    rnt.run(simple_task).result()
+    rnt.run(task_args, kwargs={'msg': 'yo'}).result()
+    rnt.run(simple_task)

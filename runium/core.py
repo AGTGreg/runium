@@ -115,9 +115,10 @@ def _run_task(fn, id, interval, times, start_in, kwargs):
         # Runium will pass some stats and functions in the callable's runium
         # attribute.
         if 'runium' in signature(fn).parameters.keys():
-            kwargs['runium'] = _make_runium_param(iterations, times)
-
-        task_result = fn(**kwargs)
+            runium_param = _make_runium_param(iterations, times)
+            task_result = fn(runium=runium_param, **kwargs)
+        else:
+            task_result = fn(**kwargs)
 
         if times > 0 and iterations >= times:
             break
@@ -170,6 +171,9 @@ class _Task(object):
 
     def result(self, timeout=None):
         return self.future.result(timeout)
+
+    def exception(self, timeout=None):
+        return self.future.exception(timeout)
 
     def get_state(self):
         return self.future._state
