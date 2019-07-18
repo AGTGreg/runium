@@ -1,9 +1,8 @@
-import os
 import codecs
 from setuptools import setup, find_packages
 
 
-CURRENT_VERSION = "0.1.6"
+CURRENT_VERSION = "0.1.7"
 
 
 def read_file(filename):
@@ -20,7 +19,7 @@ setup(
     author="Grigoris Chatzinikolaou",
     author_email="greghatzis@gmail.com",
     description="Clean and simple task concurrency for Python.",
-    long_description=read_file('README.md'),
+    long_description=read_file('README.rst'),
     keywords=[
         'concurrecy', 'asynchonous', 'tasks', 'scheduling', 'scheduler',
         'cron', 'multiprocessing', 'multithreading', 'callbacks',
