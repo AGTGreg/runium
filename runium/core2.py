@@ -75,22 +75,57 @@ class Task(object):
         self.future = None
 
     def on_success(self, fn, updates_result=False):
+        '''
+        Accepts a callable with task result as its only argument.
+        Run the callback once after the task has been executed and no
+        exceptions were raised.
+        If :updates_result is True then the task will return whatever is
+        returned by the callable.
+        '''
         self.__on_success_callback = (fn, updates_result)
         return self
 
     def on_error(self, fn, updates_result=False):
+        '''
+        Accepts a callable with task result as its only argument.
+        Run the callback once after the task has been executed and exceptions
+        were raised.
+        If :updates_result is True then the task will return whatever is
+        returned by the callable.
+        '''
         self.__on_error_callback = (fn, updates_result)
         return self
 
     def on_every_iter(self, fn, updates_result=False):
+        '''
+        Accepts a callable with task result as its only argument.
+        Run the callback on everty iteration (if times > 0) after the task's
+        method is done running.
+        The task result is the task's method success result or exception.
+        If :updates_result is True then the task will return whatever is
+        returned by the callable.
+        '''
         self.__on_iter_callback = (fn, updates_result)
         return self
 
     def on_finished(self, fn, updates_result=False):
+        '''
+        Accepts a callable with task result as its only argument.
+        Run the callback once after the task has been executed.
+        The task result is the task's method success result or exception.
+        If :updates_result is True then the task will return whatever is
+        returned by the callable.
+        '''
         self.__on_finished_callback = (fn, updates_result)
         return self
 
     def run(self, every=None, times=None, start_in=0):
+        """
+        Start running the task:
+            :every: Run every n seconds
+            :times: How many times the task should run
+            :start_in: Wait n seconds before start runing the task
+        """
         every = get_seconds(every)
         start_in = get_seconds(start_in)
         every, times = self.__set_every_times_defaults(every, times)
@@ -163,6 +198,7 @@ def _run_task(
                 (time.time() - next_time) // interval * interval + interval
             time.sleep(max(0, next_time - time.time()))
 
+    # Run callbacks
     if task_success is not None and on_success is not None:
         callback_result = on_success[FN](task_result)
         if on_success[UPDATES_RESULT] is True:
