@@ -1,5 +1,6 @@
 import random
 import time
+import traceback
 # from runium.core import Runium
 from runium.core2 import Runium
 
@@ -20,8 +21,23 @@ def simple_task():
 
 
 def simple_callback(result):
+    print('==========================')
     print('Simple callback initiated.')
     print(result)
+    print('==========================')
+    return 'YO!'
+
+
+def exceptions_callback(success, error):
+    print('==============================')
+    print('Exceptions callback initiated.')
+    if success:
+        print('Success!')
+        print(success)
+    elif error:
+        print('Error!')
+        print(error)
+    print('==============================')
     return 'YO!'
 
 
@@ -65,6 +81,7 @@ def task_stats(runium, **kwargs):
 
 
 def t_exep():
+    print('Running exception.')
     raise Exception('This is a test exception.')
 
 
@@ -80,6 +97,6 @@ if __name__ == "__main__":
     # rnt.run(task_args, kwargs={'msg': 'yo'}).result()
     # rnt.run(simple_task)
 
-    rn = Runium()
-    r1 = rn.new_task(simple_task).on_every_iter(simple_callback).run(times=10)
+    rn = Runium(mode='multiprocessing')
+    r1 = rn.new_task(t_exep).on_finished(exceptions_callback).run(times=2)
     print(r1.result())

@@ -1,6 +1,8 @@
 import atexit
 import time
 import uuid
+import traceback
+import pdb
 from inspect import signature
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from runium.util import get_seconds
@@ -98,7 +100,7 @@ class Task(object):
 
     def on_every_iter(self, fn, updates_result=False):
         '''
-        Accepts a callable with task result as its only argument.
+        Accepts a callable with task success and error as its only arguments.
         Run the callback on everty iteration (if times > 0) after the task's
         method is done running.
         The task result is the task's method success result or exception.
@@ -110,7 +112,7 @@ class Task(object):
 
     def on_finished(self, fn, updates_result=False):
         '''
-        Accepts a callable with task result as its only argument.
+        Accepts a callable with task success and error as its only arguments.
         Run the callback once after the task has been executed.
         The task result is the task's method success result or exception.
         If :updates_result is True then the task will return whatever is
@@ -185,7 +187,7 @@ def _run_task(
             _get_results(fn, kwargs, iterations, times)
 
         if on_every_iter is not None:
-            callback_result = on_every_iter[FN](task_result)
+            callback_result = on_every_iter[FN](task_success, task_error)
             if on_every_iter[UPDATES_RESULT] is True:
                 task_result = callback_result
 
@@ -200,15 +202,15 @@ def _run_task(
 
     # Run callbacks
     if task_success is not None and on_success is not None:
-        callback_result = on_success[FN](task_result)
+        callback_result = on_success[FN](task_success)
         if on_success[UPDATES_RESULT] is True:
             task_result = callback_result
     if task_error is not None and on_error is not None:
-        callback_result = on_error[FN](task_result)
+        callback_result = on_error[FN](task_error)
         if on_error[UPDATES_RESULT] is True:
             task_result = callback_result
     if on_finished is not None:
-        callback_result = on_finished[FN](task_result)
+        callback_result = on_finished[FN](task_success, task_error)
         if on_finished[UPDATES_RESULT] is True:
             task_result = callback_result
 
@@ -229,6 +231,7 @@ def _get_results(fn, kwargs, iterations, times):
             result = fn(**kwargs)
     except Exception as err:
         error = err
+        result = err
     else:
         success = result
     finally:
