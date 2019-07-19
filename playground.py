@@ -1,6 +1,7 @@
 import random
 import time
-from runium.core import Runium
+# from runium.core import Runium
+from runium.core2 import Runium
 
 some_data = 0
 
@@ -16,6 +17,12 @@ def add():
 def simple_task():
     print('==> Simple task running.')
     return True
+
+
+def simple_callback(result):
+    print('Simple callback initiated.')
+    print(result)
+    return 'YO!'
 
 
 def a_callback(future):
@@ -62,13 +69,17 @@ def t_exep():
 
 
 if __name__ == "__main__":
-    rnp = Runium(mode="multiprocessing")
-    rnt = Runium()
+    # rnp = Runium(mode="multiprocessing")
+    # rnt = Runium()
 
-    rnt.run(simple_task, times=10).result()
-    rnt.run(simple_task).result()
-    rnt.run(task_stats).result()
-    rnt.run(simple_task, every='1 second', times=5, start_in=1).result()
-    rnt.run(simple_task).result()
-    rnt.run(task_args, kwargs={'msg': 'yo'}).result()
-    rnt.run(simple_task)
+    # rnt.run(simple_task, times=10).result()
+    # rnt.run(simple_task).result()
+    # rnt.run(task_stats).result()
+    # rnt.run(simple_task, every='1 second', times=5, start_in=1).result()
+    # rnt.run(simple_task).result()
+    # rnt.run(task_args, kwargs={'msg': 'yo'}).result()
+    # rnt.run(simple_task)
+
+    rn = Runium()
+    r1 = rn.new_task(simple_task).on_every_iter(simple_callback).run(times=10)
+    print(r1.result())

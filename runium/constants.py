@@ -4,3 +4,6 @@ TIME_SCALES = {
     'hour': 3600, 'hours': 3600,
     'day': 86400, 'days': 86400
 }
+
+FN = 0
+UPDATES_RESULT = 1

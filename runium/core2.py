@@ -1,0 +1,217 @@
+import atexit
+import time
+import uuid
+from inspect import signature
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from runium.util import get_seconds
+from runium.constants import UPDATES_RESULT, FN
+
+
+class Runium(object):
+    def __init__(self, mode='multithreading', workers=None):
+        """
+        Initialise the executor pool and tasks list.
+        """
+        self.__mode = mode
+        self.__workers = workers
+        self.__tasks = {}
+        if self.__mode == 'multiprocessing':
+            self.__executor = ProcessPoolExecutor(self.__workers)
+        elif self.__mode == "multithreading":
+            self.__executor = ThreadPoolExecutor(self.__workers)
+        else:
+            raise ValueError(
+                'Mode can only be multiprocessing or multithreading.'
+            )
+        atexit.register(self.__executor.shutdown)
+
+    def new_task(self, fn, kwargs={}):
+        """
+        Creates a new Task, and adds it to the tasks list.
+        Returns the Task object.
+        """
+        task_id = uuid.uuid4().int
+        task = Task(task_id, fn, kwargs, self.__executor)
+        self.__tasks[task_id] = task
+        return task
+
+    def pending_tasks(self):
+        """
+        Cleans up and returns the tasks list.
+        """
+        return self.__clean_tasks_list()
+
+    def __remove_task_from_tasks_list(self, task_id):
+        try:
+            del self.__tasks[task_id]
+        except KeyError:
+            pass
+
+    def __clean_tasks_list(self):
+        """
+        Removes all finished tasks from the tasks list.
+        Returns the cleaned tasks list.
+        """
+        tasks_to_remove = []
+        for task_id, task in self.__tasks.items():
+            if task.future is not None:
+                if task.future.done() is True:
+                    tasks_to_remove.append(task_id)
+        for t_id in tasks_to_remove:
+            self.__remove_task_from_tasks_list(t_id)
+        return self.__tasks
+
+
+class Task(object):
+    def __init__(self, task_id, fn, kwargs, executor):
+        self.__id = task_id
+        self.__fn = fn
+        self.__kwargs = kwargs
+        self.__executor = executor
+        self.__on_success_callback = None
+        self.__on_error_callback = None
+        self.__on_iter_callback = None
+        self.__on_finished_callback = None
+        self.future = None
+
+    def on_success(self, fn, updates_result=False):
+        self.__on_success_callback = (fn, updates_result)
+        return self
+
+    def on_error(self, fn, updates_result=False):
+        self.__on_error_callback = (fn, updates_result)
+        return self
+
+    def on_every_iter(self, fn, updates_result=False):
+        self.__on_iter_callback = (fn, updates_result)
+        return self
+
+    def on_finished(self, fn, updates_result=False):
+        self.__on_finished_callback = (fn, updates_result)
+        return self
+
+    def run(self, every=None, times=None, start_in=0):
+        every = get_seconds(every)
+        start_in = get_seconds(start_in)
+        every, times = self.__set_every_times_defaults(every, times)
+
+        self.future = self.__executor.submit(
+            _run_task,
+            self.__fn, self.__id, every, times, start_in, self.__kwargs,
+            self.__on_success_callback, self.__on_error_callback,
+            self.__on_iter_callback, self.__on_finished_callback
+        )
+
+        return self.future
+
+    def __set_every_times_defaults(self, every, times):
+        """
+        Sets the :every and :times properties to sensible defaults if one or
+        any of them are not set.
+        Sets defaults so that Runium will:
+            Run the task one time if the :times and :every are not set.
+            Loop indefinitely if :every is set and :times is not set.
+        """
+        if every is None and times is None:
+            times = 1
+            every = 0
+        elif every is not None and times is None:
+            times = 0
+        elif every is None and times is not None:
+            every = 0
+        return every, times
+
+
+def _run_task(
+    fn, id, interval, times, start_in, kwargs,
+    on_success, on_error, on_every_iter, on_finished
+):
+    """
+    Runs the task, optionally for :times every :every seconds in :start_in
+    seconds.
+    This is blocking and is meant to be called by Runium internally in a new
+    Thread or Process.
+    """
+    callback_result = None
+    task_result = None
+    task_success = None
+    task_error = None
+    iterations = 0
+
+    if start_in > 0:
+        time.sleep(start_in)
+
+    next_time = time.time() + interval
+    while True:
+        iterations += 1
+        callback_result = None
+
+        task_result, task_success, task_error =\
+            _get_results(fn, kwargs, iterations, times)
+
+        if on_every_iter is not None:
+            callback_result = on_every_iter[FN](task_result)
+            if on_every_iter[UPDATES_RESULT] is True:
+                task_result = callback_result
+
+        if times > 0 and iterations >= times:
+            break
+
+        # Skip tasks if we are behind schedule:
+        if interval > 0:
+            next_time +=\
+                (time.time() - next_time) // interval * interval + interval
+            time.sleep(max(0, next_time - time.time()))
+
+    if task_success is not None and on_success is not None:
+        callback_result = on_success[FN](task_result)
+        if on_success[UPDATES_RESULT] is True:
+            task_result = callback_result
+    if task_error is not None and on_error is not None:
+        callback_result = on_error[FN](task_result)
+        if on_error[UPDATES_RESULT] is True:
+            task_result = callback_result
+    if on_finished is not None:
+        callback_result = on_finished[FN](task_result)
+        if on_finished[UPDATES_RESULT] is True:
+            task_result = callback_result
+
+    return task_result
+
+
+def _get_results(fn, kwargs, iterations, times):
+    result = None
+    success = None
+    error = None
+    try:
+        # Runium will pass some stats and functions in the callable's runium
+        # attribute.
+        if 'runium' in signature(fn).parameters.keys():
+            runium_param = _make_runium_param(iterations, times)
+            result = fn(runium=runium_param, **kwargs)
+        else:
+            result = fn(**kwargs)
+    except Exception as err:
+        error = err
+    else:
+        success = result
+    finally:
+        return result, success, error
+
+
+def _make_runium_param(iterations, times):
+    """
+    Creates and returns a dict with runium specific stats and functions that
+    can be accessed from within the task.
+    """
+    context = {
+        'iterations': iterations,
+        'iterations_remaining': times - iterations
+    }
+    return context
+
+
+# rn = Runium()
+# rn.new_task(task).run()
+# rn.new_task(task).on_finished(callback).run()
+# rn.new_task(task).on_success(success_callback).on_error(error_callback).run()
