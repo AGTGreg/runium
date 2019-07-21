@@ -80,9 +80,10 @@ def task_stats(runium, **kwargs):
     return runium
 
 
-def t_exep():
+def t_exep(runium):
     print('Running exception.')
-    raise Exception('This is a test exception.')
+    raise ValueError('This is a test exception.')
+    return runium
 
 
 if __name__ == "__main__":
@@ -97,6 +98,7 @@ if __name__ == "__main__":
     # rnt.run(task_args, kwargs={'msg': 'yo'}).result()
     # rnt.run(simple_task)
 
-    rn = Runium(mode='multiprocessing')
-    r1 = rn.new_task(t_exep).on_finished(exceptions_callback).run(times=2)
-    print(r1.result())
+    rn = Runium(mode='multiprocessing', debug=True)
+    r1 = rn.new_task(t_exep).run().result()
+    print('==> Result:')
+    print(r1)

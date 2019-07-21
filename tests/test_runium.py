@@ -1,6 +1,6 @@
 import pytest
 import time
-from runium.core import Runium
+from runium.core2 import Runium
 
 
 @pytest.fixture(scope="module")
@@ -14,20 +14,20 @@ def rnp():
 
 
 def test_run_3_times(rnt, rnp):
-    rt = rnt.run(runnium_param, times=3).result()
-    rp = rnp.run(runnium_param, times=3).result()
+    rt = rnt.new_task(runnium_param).run(times=3).result()
+    rp = rnp.new_task(runnium_param).run(times=3).result()
     assert rt['iterations'] == 3
     assert rp['iterations'] == 3
 
 
 def test_loop_drift(rnt, rnp):
     prev_time = time.time()
-    rnt.run(simple_task, every=0.1, times=10).result()
+    rnt.new_task(simple_task).run(every=0.1, times=10).result()
     time_elapsed = time.time() - prev_time
     assert time_elapsed < 1
     assert time_elapsed > 0.88
     prev_time = time.time()
-    rnp.run(simple_task, every=0.1, times=10).result()
+    rnp.new_task(simple_task).run(every=0.1, times=10).result()
     time_elapsed = time.time() - prev_time
     assert time_elapsed < 1
     assert time_elapsed > 0.88
@@ -35,12 +35,12 @@ def test_loop_drift(rnt, rnp):
 
 def test_start_in(rnt, rnp):
     prev_time = time.time()
-    rnt.run(simple_task, start_in=0.1).result()
+    rnt.new_task(simple_task).run(start_in=0.1).result()
     time_elapsed = time.time() - prev_time
     assert time_elapsed < 0.11
     assert time_elapsed > 0.09
     prev_time = time.time()
-    rnp.run(simple_task, start_in=0.1).result()
+    rnp.new_task(simple_task).run(start_in=0.1).result()
     time_elapsed = time.time() - prev_time
     assert time_elapsed < 0.11
     assert time_elapsed > 0.09
@@ -48,44 +48,93 @@ def test_start_in(rnt, rnp):
 
 def test_skipping_tasks(rnt, rnp):
     prev_time = time.time()
-    rnt.run(sleepy_task, every=0.1, times=2).result()
+    rnt.new_task(sleepy_task).run(every=0.1, times=2).result()
     time_elapsed = time.time() - prev_time
     assert time_elapsed < 0.51
     assert time_elapsed > 0.2
     prev_time = time.time()
-    rnp.run(sleepy_task, every=0.1, times=2).result()
+    rnp.new_task(sleepy_task).run(every=0.1, times=2).result()
     time_elapsed = time.time() - prev_time
     assert time_elapsed < 0.51
     assert time_elapsed > 0.2
 
 
 def test_kwargs(rnt, rnp):
-    rt = rnt.run(
+    rt = rnt.new_task(
         task_with_kwargs, kwargs={'msg': 'Spam, Spam, Spam, egg and Spam'}
-    ).result()
-    rp = rnp.run(
+    ).run().result()
+    rp = rnp.new_task(
         task_with_kwargs, kwargs={'msg': 'Spam, Spam, Spam, egg and Spam'}
 
-    ).result()
+    ).run().result()
     assert rt == 'Spam, Spam, Spam, egg and Spam'
     assert rp == 'Spam, Spam, Spam, egg and Spam'
 
 
 def test_return_exception(rnt, rnp):
-    rt = rnt.run(task_with_exception)
-    rp = rnp.run(task_with_exception)
-    pytest.raises(ValueError, rt.result)
-    pytest.raises(ValueError, rp.result)
-
-
-def test_detect_exception(rnt, rnp):
-    assert str(rnt.run(task_with_exception).exception()) == 'ni'
-    assert str(rnp.run(task_with_exception).exception()) == 'ni'
+    rt = rnt.new_task(task_with_exception).run().result()
+    rp = rnp.new_task(task_with_exception).run().result()
+    assert type(rt).__name__ == 'ValueError'
+    assert type(rp).__name__ == 'ValueError'
 
 
 def test_run_no_kwargs_bleeding(rnt, rnp):
-    assert rnt.run(simple_task).result() is True
-    assert rnp.run(simple_task).result() is True
+    assert rnt.new_task(simple_task).run().result() is True
+    assert rnp.new_task(simple_task).run().result() is True
+
+
+def test_on_finished_success_callback(rnt, rnp):
+    assert rnt.new_task(task_callback_success).on_finished(
+        se_callback, updates_result=True
+    ).run().result() == 'Success'
+    assert rnp.new_task(task_callback_success).on_finished(
+        se_callback, updates_result=True
+    ).run().result() == 'Success'
+
+
+def test_on_finished_error_callback(rnt, rnp):
+    assert rnt.new_task(task_callback_error).on_finished(
+        se_callback, updates_result=True
+    ).run().result() == 'Error'
+    assert rnp.new_task(task_callback_error).on_finished(
+        se_callback, updates_result=True
+    ).run().result() == 'Error'
+
+
+def test_success_callback(rnt, rnp):
+    assert rnt.new_task(task_callback_success).on_success(
+        success_callback, updates_result=True
+    ).run().result() == 'Success'
+    assert rnp.new_task(task_callback_success).on_success(
+        success_callback, updates_result=True
+    ).run().result() == 'Success'
+
+
+def test_error_callback(rnt, rnp):
+    assert rnt.new_task(task_callback_error).on_error(
+        error_callback, updates_result=True
+    ).run().result() == 'Error'
+    assert rnp.new_task(task_callback_error).on_error(
+        error_callback, updates_result=True
+    ).run().result() == 'Error'
+
+
+def test_iter_success_callback(rnt, rnp):
+    assert rnt.new_task(task_callback_success).on_iter(
+        se_callback, updates_result=True
+    ).run(times=3).result() == 'Success'
+    assert rnp.new_task(task_callback_success).on_iter(
+        se_callback, updates_result=True
+    ).run(times=3).result() == 'Success'
+
+
+def test_iter_error_callback(rnt, rnp):
+    assert rnt.new_task(task_callback_error).on_iter(
+        se_callback, updates_result=True
+    ).run(times=3).result() == 'Error'
+    assert rnp.new_task(task_callback_error).on_iter(
+        se_callback, updates_result=True
+    ).run(times=3).result() == 'Error'
 
 
 # DUMMY TASKS =================================================================
@@ -109,3 +158,31 @@ def task_with_exception(runium):
 def sleepy_task():
     time.sleep(0.2)
     return True
+
+
+def task_callback_success():
+    return 'Callback not fired.'
+
+
+def task_callback_error():
+    raise Exception('Callback not fired.')
+
+
+def success_callback(success):
+    if success:
+        return 'Success'
+    return None
+
+
+def error_callback(error):
+    if error:
+        return 'Error'
+    return None
+
+
+def se_callback(success, error):
+    if success:
+        return 'Success'
+    elif error:
+        return 'Error'
+    return None

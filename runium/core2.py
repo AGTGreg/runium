@@ -10,12 +10,13 @@ from runium.constants import UPDATES_RESULT, FN
 
 
 class Runium(object):
-    def __init__(self, mode='multithreading', workers=None):
+    def __init__(self, mode='multithreading', workers=None, debug=True):
         """
         Initialise the executor pool and tasks list.
         """
         self.__mode = mode
         self.__workers = workers
+        self.debug = debug
         self.__tasks = {}
         if self.__mode == 'multiprocessing':
             self.__executor = ProcessPoolExecutor(self.__workers)
@@ -33,7 +34,7 @@ class Runium(object):
         Returns the Task object.
         """
         task_id = uuid.uuid4().int
-        task = Task(task_id, fn, kwargs, self.__executor)
+        task = Task(task_id, fn, kwargs, self.__executor, self.debug)
         self.__tasks[task_id] = task
         return task
 
@@ -65,7 +66,7 @@ class Runium(object):
 
 
 class Task(object):
-    def __init__(self, task_id, fn, kwargs, executor):
+    def __init__(self, task_id, fn, kwargs, executor, debug):
         self.__id = task_id
         self.__fn = fn
         self.__kwargs = kwargs
@@ -74,6 +75,7 @@ class Task(object):
         self.__on_error_callback = None
         self.__on_iter_callback = None
         self.__on_finished_callback = None
+        self.__debug = debug
         self.future = None
 
     def on_success(self, fn, updates_result=False):
@@ -98,7 +100,7 @@ class Task(object):
         self.__on_error_callback = (fn, updates_result)
         return self
 
-    def on_every_iter(self, fn, updates_result=False):
+    def on_iter(self, fn, updates_result=False):
         '''
         Accepts a callable with task success and error as its only arguments.
         Run the callback on everty iteration (if times > 0) after the task's
@@ -135,6 +137,7 @@ class Task(object):
         self.future = self.__executor.submit(
             _run_task,
             self.__fn, self.__id, every, times, start_in, self.__kwargs,
+            self.__debug,
             self.__on_success_callback, self.__on_error_callback,
             self.__on_iter_callback, self.__on_finished_callback
         )
@@ -160,8 +163,8 @@ class Task(object):
 
 
 def _run_task(
-    fn, id, interval, times, start_in, kwargs,
-    on_success, on_error, on_every_iter, on_finished
+    fn, id, interval, times, start_in, kwargs, debug,
+    on_success, on_error, on_iter, on_finished
 ):
     """
     Runs the task, optionally for :times every :every seconds in :start_in
@@ -183,12 +186,13 @@ def _run_task(
         iterations += 1
         callback_result = None
 
+        # This is where the task is executed.
         task_result, task_success, task_error =\
-            _get_results(fn, kwargs, iterations, times)
+            _get_results(fn, kwargs, iterations, times, debug)
 
-        if on_every_iter is not None:
-            callback_result = on_every_iter[FN](task_success, task_error)
-            if on_every_iter[UPDATES_RESULT] is True:
+        if on_iter is not None:
+            callback_result = on_iter[FN](task_success, task_error)
+            if on_iter[UPDATES_RESULT] is True:
                 task_result = callback_result
 
         if times > 0 and iterations >= times:
@@ -217,19 +221,27 @@ def _run_task(
     return task_result
 
 
-def _get_results(fn, kwargs, iterations, times):
+def _get_results(fn, kwargs, iterations, times, debug):
+    """
+    Runs the task and catches any exceptions that might occur. Passes the
+    runium parameter if the task accepts one.
+    Returns:
+        success: The return of the task or None if an Exception has occurred.
+        error: The Exception object or None if no Exception occurred.
+        result: Either the return of the task or an Exception object.
+    """
     result = None
     success = None
     error = None
     try:
-        # Runium will pass some stats and functions in the callable's runium
-        # attribute.
         if 'runium' in signature(fn).parameters.keys():
             runium_param = _make_runium_param(iterations, times)
             result = fn(runium=runium_param, **kwargs)
         else:
             result = fn(**kwargs)
     except Exception as err:
+        if debug is True:
+            traceback.print_exc()
         error = err
         result = err
     else:
@@ -248,9 +260,3 @@ def _make_runium_param(iterations, times):
         'iterations_remaining': times - iterations
     }
     return context
-
-
-# rn = Runium()
-# rn.new_task(task).run()
-# rn.new_task(task).on_finished(callback).run()
-# rn.new_task(task).on_success(success_callback).on_error(error_callback).run()
