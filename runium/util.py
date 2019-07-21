@@ -9,8 +9,11 @@ def get_seconds(interval):
     Returns seconds which is time * scale.
     If interval is a number or None then it will be returned as is.
 
-    interval: Can be a number or a string in the following format: 'time scale'
-    ie: '10 minutes'.
+    Parameters
+    ----------
+    interval
+        Can be a number or a string in the following format: 'time scale'.
+        ie: '10 minutes'.
     """
     if type(interval) is str:
         interval_array = interval.split(' ')

@@ -1,6 +1,6 @@
 import pytest
 import time
-from runium.core2 import Runium
+from runium.core import Runium
 
 
 @pytest.fixture(scope="module")

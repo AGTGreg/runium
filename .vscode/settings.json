@@ -4,5 +4,5 @@
   "python.linting.pydocstyleEnabled": false,
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
-  "restructuredtext.confPath": "${workspaceFolder}/.tox/py37/lib/python3.7/site-packages/importlib_metadata/docs"
+  "restructuredtext.confPath": "${workspaceFolder}/docs/source"
 }
