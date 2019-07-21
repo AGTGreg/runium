@@ -1,17 +1,6 @@
 runium package
 ==============
 
-Submodules
-----------
-
-runium.constants module
------------------------
-
-.. automodule:: runium.constants
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 runium.core module
 ------------------
 

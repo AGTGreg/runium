@@ -22,5 +22,5 @@
    :maxdepth: 3
    :caption: Contents:
 
-      Links <links.rst>
       API Documentation <modules.rst>
+      Links <links.rst>
