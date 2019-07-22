@@ -3,7 +3,7 @@ Runium
 
 |PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
 
-.. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/runium.svg   :alt: PyPI
+.. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/runium.svg
    :target: https://pypi.org/project/runium/
 
 .. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/runium.svg
