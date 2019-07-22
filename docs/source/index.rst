@@ -19,4 +19,3 @@
       Initialization: The Runium object <runium_object.rst>
       Running tasks <running_tasks.rst>
       Callbacks <callbacks.rst>
-      Tutorial: Intro to Runium <tutorial.rst>
