@@ -3,7 +3,7 @@ Runium
 
 |PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
 
-.. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/ansicolortags.svg
+.. |PyPI version shields.io| image:: https://pypi.org/project/runium/
    :target: https://pypi.org/project/runium/
 
 .. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
@@ -87,10 +87,3 @@ Quickstart
 
     # Of course you can do all these in one line :)
     rn.new_task(task).run(every='1 second', times=3).result()
-
-Links
-=====
-
-**Github:** `https://github.com/AGTGreg/runium <https://github.com/AGTGreg/runium>`_
-
-**Pypi:** `https://pypi.org/project/runium/ <https://pypi.org/project/runium/>`_
