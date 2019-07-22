@@ -22,7 +22,10 @@ list.
 
     from runium.core import Runium
 
+    # This will run tasks as seperate Threads.
     rn = Runium()
+    # This will run tasks as seperate Processes.
+    rn = Runium(mode='multiprocessing')
 
 
 ********
@@ -36,6 +39,7 @@ Creates a new Task, and adds it to the tasks list. Returns a handy
 **Parameters**
     - **fn** -- The callable to be executed.
     - **kwargs** -- A dictionary that contains the arguments of the callable (if any).
+
 
 **Example**
 
@@ -53,14 +57,33 @@ Creates a new Task, and adds it to the tasks list. Returns a handy
         })
 
 
+.. note::
+
+    You can add the optional argument ``runium`` in your function to get access
+    to some of the statistics of that task inside that function. For example:
+
+    .. code-block:: python
+
+        def task(runium):
+            print(runium['iterations_remaining'])
+
+        runium.new_task(task).run(times=3)
+
+    .. code-block:: console
+
+        >> 3
+        >> 2
+        >> 1
+
+
 *************
 pending_tasks
 *************
 ``Runium.pending_tasks()``
 
-Returns a dictionary with all the pending tasks that looks like this: 
+Returns a dictionary with all the pending tasks that looks like this:
 
-.. code-block:: python
+.. code-block::
 
     {
         task_id: task,

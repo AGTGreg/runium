@@ -16,13 +16,7 @@
    :caption: Usage:
 
       Quickstart <quickstart.rst>
-      The Runium object <runium_object.rst>
+      Initialization: The Runium object <runium_object.rst>
+      Running tasks <running_tasks.rst>
       Callbacks <callbacks.rst>
       Tutorial: Intro to Runium <tutorial.rst>
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Contents:
-
-      API Documentation <modules.rst>
-      Links <links.rst>

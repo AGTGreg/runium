@@ -1,7 +1,3 @@
-"""
-This is the main module of Runium. Everything we need in order to use runium is
-here.
-"""
 import atexit
 import time
 import uuid
@@ -16,23 +12,6 @@ class Runium(object):
     """
     Initialises the pool and tasks list.
     Returns a Task object.
-
-    Parameters
-    ----------
-    mode
-        A string indicating wether the tasks should be run as Threads or
-        Processes. It can be either 'multithreading' (Default) or
-        'multiprocessing'.
-    max_workers
-        An integer that indicates the max number of Threads or Processes to
-        use.
-        In Multithreading mode if max_workers is None or not given, it will
-        default to the number of processors on the machine, multiplied by 5.
-        In Multiprocessing mode it will default to the number of processors on
-        the machine.
-    debug
-        If True all the exceptions raised by the tasks will be printed in the
-        console.
     """
     def __init__(self, mode='multithreading', max_workers=None, debug=True):
         self.__mode = mode
@@ -55,15 +34,6 @@ class Runium(object):
         """
         Creates a new Task, and adds it to the tasks list.
         Returns a Task object.
-
-        Parameters
-        ----------
-        fn
-            The callable to be executed.
-        kwargs
-            A dictionary that contains the arguments of the callable (if any).
-            For example: If the callable is this: send_email(subject) then the
-            kwargs parameter should look like this: kwargs={'subject': 'Test'}
         """
         task_id = uuid.uuid4().int
         task = Task(task_id, fn, kwargs, self.__executor, self.debug)
@@ -72,8 +42,7 @@ class Runium(object):
 
     def pending_tasks(self):
         """
-        Returns a dictionary with all the pending tasks that looks like this:
-        {task_id: task, task_id: task, ...}
+        Returns a dictionary with all the pending tasks.
         """
         return self.__clean_tasks_list()
 
@@ -101,9 +70,6 @@ class Runium(object):
 class Task(object):
     """
     This is the object that is returned when we use Runium.new_task(...).
-    It represents our task (as its name suggests...). We use this object to
-    attach callbacks and initiate the task's execution.
-    Task is meant to be created only by Runium.
     """
     def __init__(self, task_id, fn, kwargs, executor, debug):
         self.__id = task_id
@@ -122,15 +88,6 @@ class Task(object):
         Accepts a callable with the task's result as its only argument.
         Runs the callback after the task has been executed successfully and no
         exceptions were raised.
-
-        Parameters
-        ----------
-        fn
-            The callable to be executed with success as its only argument:
-            fn(success).
-        updates_result
-            If this is True then the task's result will be replaced with
-            whatever is returned by the callable.
         '''
         self.__on_success_callback = (fn, updates_result)
         return self
@@ -140,15 +97,6 @@ class Task(object):
         Accepts a callable with the task's exception object as its only
         argument.
         Runs the callback after an exception was raised by the task.
-
-        Parameters
-        ----------
-        fn
-            The callable to be executed with error as its only argument:
-            fn(error).
-        updates_result
-            If this is True then the task's result will be replaced with
-            whatever is returned by the callable.
         '''
         self.__on_error_callback = (fn, updates_result)
         return self
@@ -157,27 +105,6 @@ class Task(object):
         '''
         Accepts a callable with the task's success and error results as its
         only arguments.
-        If the task was successfull (no exceptions were raised) then the
-        'success' argument will contain the task's return and the 'error'
-        argument will be None.
-        If the task is unsuccessfull (an exception was raised) then the 'error'
-        argument will contain the exception object and 'success' will be None.
-        Runs the callback after the task has been executed successfully or
-        after an exception was raised.
-
-        The difference between this type of callback and all the others is that
-        the other callbacks will run only once after the task has been executed
-        no matter how many times we've set it to run. But an on_iter callback
-        will run on every iteration if the task is to be executed many times.
-
-        Parameters
-        ----------
-        fn
-            The callable to be executed with success and error as its only
-            arguments: fn(success, error)
-        updates_result
-            If this is True then the task's result will be replaced with
-            whatever is returned by the callable.
         '''
         self.__on_iter_callback = (fn, updates_result)
         return self
@@ -186,22 +113,6 @@ class Task(object):
         '''
         Accepts a callable with the task's success and error results as its
         only arguments.
-        If the task was successfull (no exceptions were raised) then the
-        'success' argument will contain the task's return and the 'error'
-        argument will be None.
-        If the task is unsuccessfull (an exception was raised) then the 'error'
-        argument will contain the exception object and 'success' will be None.
-        Runs the callback after the task has been executed successfully or
-        after an exception was raised.
-
-        Parameters
-        ----------
-        fn
-            The callable to be executed with success and error as its only
-            arguments: fn(success, error)
-        updates_result
-            If this is True then the task's result will be replaced with
-            whatever is returned by the callable.
         '''
         self.__on_finished_callback = (fn, updates_result)
         return self
@@ -209,20 +120,6 @@ class Task(object):
     def run(self, every=None, times=None, start_in=0):
         """
         Start running the task. Returns a future object.
-        (check the Python documentation of concurrent.futures)
-
-        Parameters
-        ----------
-            every
-                Run the task every n seconds. This value can be an integer or a
-                float that indicates the number of seconds or a string that
-                starts with an integer and finishes with the time scale.
-                For example: '10 seconds' '10 minutes' '1 hour'
-            times
-                How many times the task should run. It accepts an integer.
-            start_in
-                Wait n seconds before start runing the task. It accepts the 
-                same values as :every.
         """
         every = get_seconds(every)
         start_in = get_seconds(start_in)
@@ -260,12 +157,6 @@ def _run_task(
     fn, id, interval, times, start_in, kwargs, debug,
     on_success, on_error, on_iter, on_finished
 ):
-    """
-    Runs the task, optionally for :times every :every seconds in :start_in
-    seconds.
-    This is blocking and is meant to be called by Runium internally in a new
-    Thread or Process.
-    """
     callback_result = None
     task_result = None
     task_success = None
