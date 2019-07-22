@@ -1,25 +1,19 @@
 Runium
 ======
 
-|PyPI version shields.io|
+|PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
 
 .. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/ansicolortags.svg
-   :target: https://pypi.python.org/pypi/ansicolortags/
-
-|PyPI pyversions|
+   :target: https://pypi.org/project/runium/
 
 .. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
-   :target: https://pypi.python.org/pypi/ansicolortags/
-
-|Documentation Status|
+   :target: https://pypi.org/project/runium/
 
 .. |Documentation Status| image:: https://readthedocs.org/projects/ansicolortags/badge/?version=latest
-   :target: http://ansicolortags.readthedocs.io/?badge=latest
-
-|GitHub license|
+   :target: https://runium.readthedocs.io/en/latest/main.html
 
 .. |GitHub license| image:: https://img.shields.io/github/license/Naereen/StrapDown.js.svg
-   :target: https://github.com/Naereen/StrapDown.js/blob/master/LICENSE
+   :target: https://github.com/AGTGreg/runium/blob/master/LICENSE
 
 Runium is a Python library that makes it easy to write non-blocking,
 asynchronous tasks.
