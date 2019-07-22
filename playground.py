@@ -1,6 +1,8 @@
 import random
 import time
-from runium.core import Runium
+import traceback
+# from runium.core import Runium
+from runium.core2 import Runium
 
 some_data = 0
 
@@ -16,6 +18,27 @@ def add():
 def simple_task():
     print('==> Simple task running.')
     return True
+
+
+def simple_callback(result):
+    print('==========================')
+    print('Simple callback initiated.')
+    print(result)
+    print('==========================')
+    return 'YO!'
+
+
+def exceptions_callback(success, error):
+    print('==============================')
+    print('Exceptions callback initiated.')
+    if success:
+        print('Success!')
+        print(success)
+    elif error:
+        print('Error!')
+        print(error)
+    print('==============================')
+    return 'YO!'
 
 
 def a_callback(future):
@@ -57,18 +80,25 @@ def task_stats(runium, **kwargs):
     return runium
 
 
-def t_exep():
-    raise Exception('This is a test exception.')
+def t_exep(runium):
+    print('Running exception.')
+    raise ValueError('This is a test exception.')
+    return runium
 
 
 if __name__ == "__main__":
-    rnp = Runium(mode="multiprocessing")
-    rnt = Runium()
+    # rnp = Runium(mode="multiprocessing")
+    # rnt = Runium()
 
-    rnt.run(simple_task, times=10).result()
-    rnt.run(simple_task).result()
-    rnt.run(task_stats).result()
-    rnt.run(simple_task, every='1 second', times=5, start_in=1).result()
-    rnt.run(simple_task).result()
-    rnt.run(task_args, kwargs={'msg': 'yo'}).result()
-    rnt.run(simple_task)
+    # rnt.run(simple_task, times=10).result()
+    # rnt.run(simple_task).result()
+    # rnt.run(task_stats).result()
+    # rnt.run(simple_task, every='1 second', times=5, start_in=1).result()
+    # rnt.run(simple_task).result()
+    # rnt.run(task_args, kwargs={'msg': 'yo'}).result()
+    # rnt.run(simple_task)
+
+    rn = Runium(mode='multiprocessing', debug=True)
+    r1 = rn.new_task(t_exep).run().result()
+    print('==> Result:')
+    print(r1)
