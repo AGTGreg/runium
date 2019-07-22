@@ -3,16 +3,16 @@ Runium
 
 |PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
 
-.. |PyPI version shields.io| image:: https://pypi.org/project/runium/
+.. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/runium.svg   :alt: PyPI
    :target: https://pypi.org/project/runium/
 
-.. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
+.. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/runium.svg
    :target: https://pypi.org/project/runium/
 
-.. |Documentation Status| image:: https://readthedocs.org/projects/ansicolortags/badge/?version=latest
+.. |Documentation Status| image:: https://readthedocs.org/projects/runium/badge/?version=latest
    :target: https://runium.readthedocs.io/en/latest/main.html
 
-.. |GitHub license| image:: https://img.shields.io/github/license/Naereen/StrapDown.js.svg
+.. |GitHub license| image:: https://img.shields.io/github/license/runium/StrapDown.js.svg
    :target: https://github.com/AGTGreg/runium/blob/master/LICENSE
 
 Runium is a Python library that makes it easy to write non-blocking,
