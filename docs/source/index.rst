@@ -16,6 +16,8 @@
    :caption: Usage:
 
       Quickstart <quickstart.rst>
+      The Runium object <runium_object.rst>
+      Callbacks <callbacks.rst>
       Tutorial: Intro to Runium <tutorial.rst>
 
 .. toctree::
