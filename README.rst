@@ -1,6 +1,6 @@
 Runium
 ======
-.. image:: _static/runium_logo.png
+.. image:: docs/source/_static/runium_logo.png
   :width: 128
   :alt: Runium logo
 
