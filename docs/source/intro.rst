@@ -1,7 +1,10 @@
 Runium
 ======
 
-|PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
+|Travis build status| |PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
+
+.. |Travis build status| image:: https://travis-ci.org/AGTGreg/runium.svg?branch=master
+   :target: https://travis-ci.org/AGTGreg/runium
 
 .. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/runium.svg
    :target: https://pypi.org/project/runium/
