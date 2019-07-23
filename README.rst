@@ -1,7 +1,6 @@
 Runium
 ======
-.. image:: docs/source/_static/runium_logo.png
-  :width: 128
+.. image:: docs/source/_static/runium_logo_small.png
   :alt: Runium logo
 
 |Travis build status| |PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
