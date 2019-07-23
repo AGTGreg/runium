@@ -28,7 +28,7 @@ exception was raised.
 
 **Parameters**
     - **fn** -- The callable to be executed with success and error as its only arguments.
-    - **updates_result** -- If this is True then the task's result will be replaced with whatever is returned by the callable.
+    - **updates_result** -- *(Optional)* If this is True then the task's result will be replaced with whatever is returned by the callable.
 
 **Example:**
 
@@ -45,6 +45,7 @@ exception was raised.
             return True
         elif error:
             return "An error occurred."
+
 
     # Attach the callback like this
     async_task = runium.new_task(send_email).on_finished(callback).run()
@@ -72,7 +73,7 @@ exceptions were raised.
 
 **Parameters**
     - **fn** -- The callable to be executed with success as its only argument.
-    - **updates_result** -- If this is True then the task's result will be replaced with whatever is returned by the callable.
+    - **updates_result** -- *(Optional)* If this is True then the task's result will be replaced with whatever is returned by the callable.
 
 **Example:**
 
@@ -110,7 +111,7 @@ the callback after an exception was raised by the task.
 
 **Parameters**
     - **fn** -- The callable to be executed with error as its only argument.
-    - **updates_result** -- If this is True then the task’s result will be replaced with whatever is returned by the callable.
+    - **updates_result** -- *(Optional)* If this is True then the task’s result will be replaced with whatever is returned by the callable.
 
 **Example:**
 
@@ -163,7 +164,7 @@ will run on every iteration if the task is to be executed many times.
 
 **Parameters**
     - **fn** -- The callable to be executed with success and error as its only arguments: fn(success, error)
-    - **updates_result** -- If this is True then the task's result will be replaced with whatever is returned by the callable.
+    - **updates_result** -- *(Optional)* If this is True then the task's result will be replaced with whatever is returned by the callable.
 
 **Example:**
 
@@ -180,3 +181,16 @@ will run on every iteration if the task is to be executed many times.
 
     # The callback will be executed 3 times.
     async_task = runium.new_task(send_email).on_iter(callback).run(times=3)
+
+
+*****************
+add_done_callback
+*****************
+
+This is not a Runium method but since ``Task.run()`` returns a `Future`_
+object, you can also add callbacks using this method. But you have to call
+``run()`` first before using this method.
+Read the documentation about it here: `add_done_callback()`_
+
+.. _Future: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future
+.. _add_done_callback(): https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future.add_done_callback

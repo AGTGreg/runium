@@ -15,7 +15,7 @@
    :maxdepth: 2
    :caption: Usage:
 
-      Quickstart <quickstart.rst>
-      Initialization: The Runium object <runium_object.rst>
-      Running tasks <running_tasks.rst>
+      Initialize Runium <init_runium.rst>
+      Creating tasks <creating_tasks.rst>
       Callbacks <callbacks.rst>
+      Running tasks <running_tasks.rst>

@@ -1,5 +1,8 @@
 Runium
 ======
+.. image:: _static/runium_logo.png
+  :width: 128
+  :alt: Runium logo
 
 |Travis build status| |PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
 
@@ -28,19 +31,3 @@ run them at a specific time.
 
 The purpose of Runium is to do these simple, easy and clean with minimum to
 no changes to your code. Just one line of code is all it takes.
-
-So if you want to run a long-running task without blocking your code, instead
-of doing this:
-
-.. code-block:: python
-
-  send_email()
-
-...you can use Runium and run it asynchronously like this:
-
-.. code-block:: python
-
-  runium.new_task(send_email).run()
-
-And now this method will run in the background without blocking your entire
-app. It's that simple!
