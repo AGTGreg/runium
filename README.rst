@@ -118,4 +118,4 @@ Quickstart
 Authors
 =======
 
-`Grigoris Chatzinikolaou/ <www.linkedin.com/in/greg-chatzinikolaou-bba1927>`_
+`Grigoris Chatzinikolaou <www.linkedin.com/in/greg-chatzinikolaou-bba1927>`_
