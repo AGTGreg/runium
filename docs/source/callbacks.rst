@@ -13,6 +13,9 @@ on_finished
 ***********
 ``Task.on_finished(fn, updates_result=False)``
 
+Runs the callback after the task has been executed successfully or after an
+exception was raised.
+
 Accepts a callable with the task's success and error results as its only
 arguments.
 
@@ -22,9 +25,6 @@ argument will contain the task's return and the error argument will be
 
 If the task is unsuccessfull (an exception was raised) then the error argument
 will contain the exception object and success will be ``None``.
-
-Runs the callback after the task has been executed successfully or after an
-exception was raised.
 
 **Parameters**
     - **fn** -- The callable to be executed with success and error as its only arguments.
@@ -67,9 +67,10 @@ on_success
 **********
 ``Task.on_success(fn, updates_result=False)``
 
-Accepts a callable with the task's result as its only argument.
 Runs the callback after the task has been executed successfully and no
 exceptions were raised.
+
+Accepts a callable with the task's result as its only argument.
 
 **Parameters**
     - **fn** -- The callable to be executed with success as its only argument.
@@ -106,8 +107,9 @@ on_error
 ********
 ``Task.on_error(fn, updates_result=False)``
 
-Accepts a callable with the task’s exception object as its only argument. Runs
-the callback after an exception was raised by the task.
+Runs the callback after an exception was raised by the task.
+
+Accepts a callable with the task’s exception object as its only argument.
 
 **Parameters**
     - **fn** -- The callable to be executed with error as its only argument.
@@ -144,6 +146,9 @@ on_iter
 *******
 ``Task.on_iter(fn, updates_result=False)``
 
+Runs the callback every time the task is beeing executed successfully or after
+an exception was raised.
+
 Accepts a callable with the task's success and error results as its only
 arguments.
 
@@ -153,9 +158,6 @@ argument will be ``None``.
 
 If the task is unsuccessfull (an exception was raised) then the error
 argument will contain the exception object and success will be ``None``.
-
-Runs the callback after the task has been executed successfully or after an
-exception was raised.
 
 The difference between this type of callback and all the others is that
 the other callbacks will run only once after the task has been executed
