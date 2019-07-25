@@ -31,6 +31,12 @@ run them at a specific time.
 The purpose of Runium is to do these simple, easy and clean with minimum to
 no changes to your code. Just one line of code is all it takes.
 
+**Documentation** `https://runium.readthedocs.io/en/latest/main.html <https://runium.readthedocs.io/en/latest/main.html>`_
+
+**Github:** `https://github.com/AGTGreg/runium <https://github.com/AGTGreg/runium>`_
+
+**Pypi:** `https://pypi.org/project/runium/ <https://pypi.org/project/runium/>`_
+
 Features
 ========
 * **Concurrency**: Run a task once or many times in its own Thread or Process.
@@ -57,6 +63,11 @@ Quickstart
 .. code-block:: python
 
     from runium.core import Runium
+
+
+    def task():
+        print("I am working...")
+
 
     # Initialize Runium
     rn = Runium()
@@ -104,12 +115,7 @@ Quickstart
     # Here it is in one line :)
     rn.new_task(task).run(every='1 second', times=3).result()
 
-*************
-Documentation
-*************
-`https://runium.readthedocs.io/en/latest/main.html <https://runium.readthedocs.io/en/latest/main.html>`_
+Authors
+=======
 
-****
-Pypi
-****
-`https://pypi.org/project/runium/ <https://pypi.org/project/runium/>`_
+`Grigoris Chatzinikolaou/ <www.linkedin.com/in/greg-chatzinikolaou-bba1927>`_

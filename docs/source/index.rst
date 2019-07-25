@@ -19,3 +19,9 @@
       Creating tasks <creating_tasks.rst>
       Callbacks <callbacks.rst>
       Running tasks <running_tasks.rst>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Epilogue:
+
+      Contributing <contributing.rst>

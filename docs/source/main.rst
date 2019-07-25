@@ -5,5 +5,3 @@
 .. include:: installation.rst
 
 .. include:: quickstart.rst
-
-.. include:: links.rst

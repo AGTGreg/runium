@@ -7,6 +7,11 @@ Quickstart
 
     from runium.core import Runium
 
+
+    def task():
+        print("I am working...")
+
+
     # Initialize Runium
     rn = Runium()
 
