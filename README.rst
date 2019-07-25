@@ -114,3 +114,9 @@ Quickstart
 
     # Here it is in one line :)
     rn.new_task(task).run(every='1 second', times=3).result()
+
+Contributing
+============
+
+Please read our Contributing guidelines here:
+`https://runium.readthedocs.io/en/latest/contributing.html <https://runium.readthedocs.io/en/latest/contributing.html>`_
