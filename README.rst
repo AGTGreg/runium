@@ -114,8 +114,3 @@ Quickstart
 
     # Here it is in one line :)
     rn.new_task(task).run(every='1 second', times=3).result()
-
-Authors
-=======
-
-`Grigoris Chatzinikolaou <www.linkedin.com/in/greg-chatzinikolaou-bba1927>`_
