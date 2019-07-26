@@ -4,10 +4,13 @@ Runium
   :width: 128
   :alt: Runium logo
 
-|Travis build status| |PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
+|Travis build status| |Code Climate maintainability| |PyPI version shields.io| |PyPI pyversions| |Documentation Status| |GitHub license|
 
 .. |Travis build status| image:: https://travis-ci.org/AGTGreg/runium.svg?branch=master
    :target: https://travis-ci.org/AGTGreg/runium
+
+.. |Code Climate maintainability| image:: https://api.codeclimate.com/v1/badges/e5155e4439eec7e39be5/maintainability
+   :target: https://codeclimate.com/github/AGTGreg/runium/maintainability
 
 .. |PyPI version shields.io| image:: https://img.shields.io/pypi/v/runium.svg
    :target: https://pypi.org/project/runium/
