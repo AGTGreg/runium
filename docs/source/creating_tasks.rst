@@ -58,6 +58,6 @@ Creates a new Task, and adds it to the tasks list. Returns a handy
 
     .. code-block:: console
 
-        >> 3
         >> 2
         >> 1
+        >> 0
