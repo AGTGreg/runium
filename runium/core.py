@@ -11,13 +11,13 @@ from runium.constants import UPDATES_RESULT, FN
 class Runium(object):
     """
     Initialises the pool and tasks list.
-    Returns a Task object.
     """
     def __init__(self, mode='multithreading', max_workers=None, debug=True):
         self.__mode = mode
         self.__max_workers = max_workers
         self.debug = debug
         self.__tasks = {}
+
         if self.__mode == 'multiprocessing':
             self.__executor = ProcessPoolExecutor(
                 max_workers=self.__max_workers)
@@ -28,12 +28,13 @@ class Runium(object):
             raise ValueError(
                 'Mode can only be multiprocessing or multithreading.'
             )
+
         atexit.register(self.__executor.shutdown)
 
     def new_task(self, fn, kwargs={}):
         """
-        Creates a new Task, and adds it to the tasks list.
-        Returns a Task object.
+        Creates a new Task, and adds it to the tasks list. Returns a Task
+        object.
         """
         task_id = uuid.uuid4().int
         task = Task(task_id, fn, kwargs, self.__executor, self.debug)
@@ -41,9 +42,6 @@ class Runium(object):
         return task
 
     def pending_tasks(self):
-        """
-        Returns a dictionary with all the pending tasks.
-        """
         return self.__clean_tasks_list()
 
     def __remove_task_from_tasks_list(self, task_id):
@@ -54,14 +52,14 @@ class Runium(object):
 
     def __clean_tasks_list(self):
         """
-        Removes all finished tasks from the tasks list.
-        Returns the cleaned tasks list.
+        Removes all finished tasks from the tasks list. Returns the cleaned
+        tasks list.
         """
         tasks_to_remove = []
         for task_id, task in self.__tasks.items():
-            if task.future is not None:
-                if task.future.done() is True:
-                    tasks_to_remove.append(task_id)
+            if task.future is not None and task.future.done() is True:
+                tasks_to_remove.append(task_id)
+
         for t_id in tasks_to_remove:
             self.__remove_task_from_tasks_list(t_id)
         return self.__tasks
@@ -84,42 +82,24 @@ class Task(object):
         self.future = None
 
     def on_success(self, fn, updates_result=False):
-        '''
-        Accepts a callable with the task's result as its only argument.
-        Runs the callback after the task has been executed successfully and no
-        exceptions were raised.
-        '''
         self.__on_success_callback = (fn, updates_result)
         return self
 
     def on_error(self, fn, updates_result=False):
-        '''
-        Accepts a callable with the task's exception object as its only
-        argument.
-        Runs the callback after an exception was raised by the task.
-        '''
         self.__on_error_callback = (fn, updates_result)
         return self
 
     def on_iter(self, fn, updates_result=False):
-        '''
-        Accepts a callable with the task's success and error results as its
-        only arguments.
-        '''
         self.__on_iter_callback = (fn, updates_result)
         return self
 
     def on_finished(self, fn, updates_result=False):
-        '''
-        Accepts a callable with the task's success and error results as its
-        only arguments.
-        '''
         self.__on_finished_callback = (fn, updates_result)
         return self
 
     def run(self, every=None, times=None, start_in=0):
         """
-        Start running the task. Returns a future object.
+        Submits the task to the Pool.
         """
         every = get_seconds(every)
         start_in = get_seconds(start_in)
