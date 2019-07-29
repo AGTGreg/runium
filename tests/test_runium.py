@@ -23,6 +23,16 @@ class TestTimes():
         assert rp['iterations'] == 3
 
 
+class TestRuniumParam():
+    def test_threading(self, rnt):
+        rt = rnt.new_task(runnium_param).run(times=3).result()
+        assert rt['iterations_remaining'] == 0
+
+    def test_processing(self, rnp):
+        rp = rnp.new_task(runnium_param).run(times=3).result()
+        assert rp['iterations_remaining'] == 0
+
+
 class TestLoopDrift():
     def test_threading(selft, rnt):
         prev_time = time.time()
@@ -172,15 +182,15 @@ class TestTasksList(object):
         r1.run().result()
         assert tasks_prev_count == 1
 
-    def test_count_finished_threading(self, rnt):
-        rnt.new_task(simple_task).run().result()
-        assert len(rnt.pending_tasks()) == 0
-
     def test_count_processing(self, rnp):
         r1 = rnp.new_task(simple_task)
         tasks_prev_count = len(rnp.pending_tasks())
         r1.run().result()
         assert tasks_prev_count == 1
+
+    def test_count_finished_threading(self, rnt):
+        rnt.new_task(simple_task).run().result()
+        assert len(rnt.pending_tasks()) == 0
 
     def test_count_finished_processing(self, rnp):
         rnp.new_task(simple_task).run().result()
@@ -197,6 +207,7 @@ def task_with_kwargs(msg=None, **kwargs):
 
 
 def runnium_param(runium):
+    print(runium['iterations_remaining'])
     return runium
 
 
