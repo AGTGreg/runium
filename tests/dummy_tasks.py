@@ -5,6 +5,10 @@ def simple_task():
     return True
 
 
+def none_task():
+    return None
+
+
 def task_with_kwargs(msg=None, **kwargs):
     return msg
 

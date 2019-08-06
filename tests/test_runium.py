@@ -1,8 +1,9 @@
 import pytest
 import time
 from .dummy_tasks import (
-    simple_task, task_with_kwargs, runnium_param, task_with_exception, 
-    sleepy_task, task_callback_success, task_callback_error, success_callback,
+    simple_task, none_task, task_with_kwargs, runnium_param,
+    task_with_exception, sleepy_task, task_callback_success,
+    task_callback_error, success_callback,
     error_callback, se_callback
 )
 from runium.core import Runium
@@ -139,6 +140,16 @@ class TestCallbacks(object):
             se_callback, updates_result=True
         ).run().result() == 'Error'
 
+    def test_on_finished_no_return_threading(self, rnt):
+        assert rnt.new_task(none_task).on_finished(
+            se_callback, updates_result=True
+        ).run().result() == 'Success'
+
+    def test_on_finished_no_return_processing(self, rnp):
+        assert rnp.new_task(none_task).on_finished(
+            se_callback, updates_result=True
+        ).run().result() == 'Success'
+
     def test_on_success_threading(self, rnt):
         assert rnt.new_task(task_callback_success).on_success(
             success_callback, updates_result=True
@@ -146,6 +157,16 @@ class TestCallbacks(object):
 
     def test_on_success_processing(self, rnp):
         assert rnp.new_task(task_callback_success).on_success(
+            success_callback, updates_result=True
+        ).run().result() == 'Success'
+
+    def test_on_success_no_return_threading(self, rnt):
+        assert rnt.new_task(none_task).on_success(
+            success_callback, updates_result=True
+        ).run().result() == 'Success'
+
+    def test_on_success_no_return_processing(self, rnp):
+        assert rnp.new_task(none_task).on_success(
             success_callback, updates_result=True
         ).run().result() == 'Success'
 
