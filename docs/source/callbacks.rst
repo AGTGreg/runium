@@ -4,6 +4,16 @@ Callbacks
 A callback is a function that is attached to a ``runium.core.Task`` object and
 gets executed as soon as the task finishes.
 
+Depending on which type of callbacks you are using (see the different types
+bellow) they must have arguments for ``success`` or ``error`` or both where the
+task's result will be passed. If a task has been executed successfully but it
+returned ``None`` then the ``success`` will return
+``True``.
+
+Callbacks can also affect the end result of your task through the
+``updates_result`` parameter. If it is set to ``True`` then your task’s result
+will be replaced with whatever is returned by your callback.
+
 Callbacks are executed in the same Thread/Process as the Task that calls them.
 As a result they are non-blocking.
 
