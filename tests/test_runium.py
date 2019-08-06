@@ -1,5 +1,10 @@
 import pytest
 import time
+from .dummy_tasks import (
+    simple_task, task_with_kwargs, runnium_param, task_with_exception, 
+    sleepy_task, task_callback_success, task_callback_error, success_callback,
+    error_callback, se_callback
+)
 from runium.core import Runium
 
 
@@ -195,55 +200,3 @@ class TestTasksList(object):
     def test_count_finished_processing(self, rnp):
         rnp.new_task(simple_task).run().result()
         assert len(rnp.pending_tasks()) == 0
-
-
-# DUMMY TASKS =================================================================
-def simple_task():
-    return True
-
-
-def task_with_kwargs(msg=None, **kwargs):
-    return msg
-
-
-def runnium_param(runium):
-    print(runium['iterations_remaining'])
-    return runium
-
-
-def task_with_exception(runium):
-    raise ValueError('ni')
-    return runium
-
-
-def sleepy_task():
-    time.sleep(0.2)
-    return True
-
-
-def task_callback_success():
-    return 'Callback not fired.'
-
-
-def task_callback_error():
-    raise Exception('Callback not fired.')
-
-
-def success_callback(success):
-    if success:
-        return 'Success'
-    return None
-
-
-def error_callback(error):
-    if error:
-        return 'Error'
-    return None
-
-
-def se_callback(success, error):
-    if success:
-        return 'Success'
-    elif error:
-        return 'Error'
-    return None
