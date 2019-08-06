@@ -210,7 +210,10 @@ def _get_results(fn, kwargs, iterations, times, debug):
         error = err
         result = err
     else:
-        success = result
+        if result is None:
+            success = True
+        else:
+            success = result
     finally:
         return result, success, error
 
