@@ -2,7 +2,7 @@ import codecs
 from setuptools import setup, find_packages
 
 
-CURRENT_VERSION = "0.1.8"
+CURRENT_VERSION = "0.1.9"
 
 
 def read_file(filename):
