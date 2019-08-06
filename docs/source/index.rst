@@ -25,3 +25,4 @@
    :caption: Epilogue:
 
       Contributing <contributing.rst>
+      Changelog <changelog.rst>

@@ -200,6 +200,16 @@ class TestCallbacks(object):
             se_callback, updates_result=True
         ).run(times=3).result() == 'Error'
 
+    def test_on_iter_no_return_threading(self, rnt):
+        assert rnt.new_task(none_task).on_iter(
+            se_callback, updates_result=True
+        ).run().result() == 'Success'
+
+    def test_on_iter_no_return_processing(self, rnp):
+        assert rnp.new_task(none_task).on_iter(
+            se_callback, updates_result=True
+        ).run().result() == 'Success'
+
 
 class TestTasksList(object):
     def test_count_threading(self, rnt):
