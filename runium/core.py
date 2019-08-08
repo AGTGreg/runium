@@ -4,7 +4,8 @@ import uuid
 import traceback
 from inspect import signature
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-from runium.util import get_seconds
+from .util import get_seconds
+from .constants import CALLBACK_TYPES as CT
 
 
 class Runium(object):
@@ -74,9 +75,9 @@ class Task(object):
         self.__kwargs = kwargs
         self.__executor = executor
         self.__callbacks = {
-            'on_success': None,
-            'on_error': None,
-            'on_finished': None
+            CT.ON_FINISHED: None,
+            CT.ON_SUCCESS: None,
+            CT.ON_ERROR: None
         }
         self.__debug = debug
         self.future = None
@@ -84,15 +85,15 @@ class Task(object):
     def on_success(
         self, fn=None, updates_result=False, stop=None, repeat=None
     ):
-        self.__set_callback('on_success', fn, updates_result, stop, repeat)
+        self.__set_callback(CT.ON_SUCCESS, fn, updates_result, stop, repeat)
         return self
 
     def on_error(self, fn=None, updates_result=False, stop=None, repeat=None):
-        self.__set_callback('on_error', fn, updates_result, stop, repeat)
+        self.__set_callback(CT.ON_ERROR, fn, updates_result, stop, repeat)
         return self
 
     def on_finished(self, fn=None, updates_result=False):
-        self.__set_callback('on_finished', fn, updates_result)
+        self.__set_callback(CT.ON_FINISHED, fn, updates_result)
         return self
 
     def __set_callback(
@@ -101,7 +102,8 @@ class Task(object):
     ):
         if fn is not None:
             self.__callbacks[callback_type] = {
-                'fn': fn, 'updates_result': updates_result
+                'fn': fn, 'updates_result': updates_result,
+                'type': callback_type
             }
         elif stop_task is True:
             self.__callbacks[callback_type] = {
@@ -116,7 +118,8 @@ class Task(object):
                 every = None
             self.__callbacks[callback_type] = {
                 'fn': _repeat_task(times, every),
-                'updates_result': updates_result
+                'updates_result': updates_result,
+                'type': callback_type
             }
         else:
             raise ValueError('No callback parameters set.')
@@ -170,15 +173,18 @@ def _run_task(
     while True:
         iterations += 1
 
-        # This is where the task is executed.
+        # This is where the task is executed and we get its result.
         task_result, task_success, task_error =\
             _get_results(fn, kwargs, iterations, times, debug)
 
         # Callbacks
-        task_result = _run_callback(
-            callbacks['on_success'], success=task_success, result=task_result)
-        task_result = _run_callback(
-            callbacks['on_error'], error=task_error, result=task_result)
+        if task_success is not None:
+            task_result = _run_callback(
+                callbacks[CT.ON_SUCCESS], success=task_success,
+                result=task_result)
+        if task_error is not None:
+            task_result = _run_callback(
+                callbacks[CT.ON_ERROR], error=task_error, result=task_result)
 
         if times > 0 and iterations >= times:
             break
@@ -190,7 +196,7 @@ def _run_task(
             time.sleep(max(0, next_time - time.time()))
 
     task_result = _run_callback(
-        callbacks['on_finished'], success=task_success, error=task_error,
+        callbacks[CT.ON_FINISHED], success=task_success, error=task_error,
         result=task_result
     )
 
@@ -239,12 +245,13 @@ def _run_callback(callback, success=None, error=None, result=None):
         except KeyError:
             pass
         else:
+            cl_type = callback['type']
             if fn is not None:
-                if success is not None and error is not None:
+                if cl_type == CT.ON_FINISHED:
                     callback_result = fn(success, error)
-                elif error is not None:
+                elif cl_type == CT.ON_ERROR:
                     callback_result = fn(error)
-                elif success is not None:
+                elif cl_type == CT.ON_SUCCESS:
                     callback_result = fn(success)
 
         try:
