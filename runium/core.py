@@ -5,7 +5,6 @@ import traceback
 from inspect import signature
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from runium.util import get_seconds
-from runium.constants import UPDATES_RESULT, FN
 
 
 class Runium(object):
@@ -74,28 +73,53 @@ class Task(object):
         self.__fn = fn
         self.__kwargs = kwargs
         self.__executor = executor
-        self.__on_success_callback = None
-        self.__on_error_callback = None
-        self.__on_iter_callback = None
-        self.__on_finished_callback = None
+        self.__callbacks = {
+            'on_success': None,
+            'on_error': None,
+            'on_finished': None
+        }
         self.__debug = debug
         self.future = None
 
-    def on_success(self, fn, updates_result=False):
-        self.__on_success_callback = (fn, updates_result)
+    def on_success(
+        self, fn=None, updates_result=False, stop=None, repeat=None
+    ):
+        self.__set_callback('on_success', fn, updates_result, stop, repeat)
         return self
 
-    def on_error(self, fn, updates_result=False):
-        self.__on_error_callback = (fn, updates_result)
+    def on_error(self, fn=None, updates_result=False, stop=None, repeat=None):
+        self.__set_callback('on_error', fn, updates_result, stop, repeat)
         return self
 
-    def on_iter(self, fn, updates_result=False):
-        self.__on_iter_callback = (fn, updates_result)
+    def on_finished(self, fn=None, updates_result=False):
+        self.__set_callback('on_finished', fn, updates_result)
         return self
 
-    def on_finished(self, fn, updates_result=False):
-        self.__on_finished_callback = (fn, updates_result)
-        return self
+    def __set_callback(
+        self, callback_type, fn=None, updates_result=False, stop_task=None,
+        repeat_task=None
+    ):
+        if fn is not None:
+            self.__callbacks[callback_type] = {
+                'fn': fn, 'updates_result': updates_result
+            }
+        elif stop_task is True:
+            self.__callbacks[callback_type] = {
+                'stop_task': True
+            }
+        elif repeat_task is not None:
+            # times is mandatory, every is not
+            times = repeat_task['times']
+            try:
+                every = repeat_task['every']
+            except KeyError:
+                every = None
+            self.__callbacks[callback_type] = {
+                'fn': _repeat_task(times, every),
+                'updates_result': updates_result
+            }
+        else:
+            raise ValueError('No callback parameters set.')
 
     def run(self, every=None, times=None, start_in=0):
         """
@@ -108,9 +132,7 @@ class Task(object):
         self.future = self.__executor.submit(
             _run_task,
             self.__fn, self.__id, every, times, start_in, self.__kwargs,
-            self.__debug,
-            self.__on_success_callback, self.__on_error_callback,
-            self.__on_iter_callback, self.__on_finished_callback
+            self.__debug, self.__callbacks
         )
 
         return self.future
@@ -134,10 +156,8 @@ class Task(object):
 
 
 def _run_task(
-    fn, id, interval, times, start_in, kwargs, debug,
-    on_success, on_error, on_iter, on_finished
+    fn, id, interval, times, start_in, kwargs, debug, callbacks
 ):
-    callback_result = None
     task_result = None
     task_success = None
     task_error = None
@@ -149,16 +169,16 @@ def _run_task(
     next_time = time.time() + interval
     while True:
         iterations += 1
-        callback_result = None
 
         # This is where the task is executed.
         task_result, task_success, task_error =\
             _get_results(fn, kwargs, iterations, times, debug)
 
-        if on_iter is not None:
-            callback_result = on_iter[FN](task_success, task_error)
-            if on_iter[UPDATES_RESULT] is True:
-                task_result = callback_result
+        # Callbacks
+        task_result = _run_callback(
+            callbacks['on_success'], success=task_success, result=task_result)
+        task_result = _run_callback(
+            callbacks['on_error'], error=task_error, result=task_result)
 
         if times > 0 and iterations >= times:
             break
@@ -169,19 +189,10 @@ def _run_task(
                 (time.time() - next_time) // interval * interval + interval
             time.sleep(max(0, next_time - time.time()))
 
-    # Run callbacks
-    if task_success is not None and on_success is not None:
-        callback_result = on_success[FN](task_success)
-        if on_success[UPDATES_RESULT] is True:
-            task_result = callback_result
-    if task_error is not None and on_error is not None:
-        callback_result = on_error[FN](task_error)
-        if on_error[UPDATES_RESULT] is True:
-            task_result = callback_result
-    if on_finished is not None:
-        callback_result = on_finished[FN](task_success, task_error)
-        if on_finished[UPDATES_RESULT] is True:
-            task_result = callback_result
+    task_result = _run_callback(
+        callbacks['on_finished'], success=task_success, error=task_error,
+        result=task_result
+    )
 
     return task_result
 
@@ -218,6 +229,33 @@ def _get_results(fn, kwargs, iterations, times, debug):
         return result, success, error
 
 
+def _run_callback(callback, success=None, error=None, result=None):
+    callback_result = None
+
+    if callback is not None:
+        fn = None
+        try:
+            fn = callback['fn']
+        except KeyError:
+            pass
+        else:
+            if fn is not None:
+                if success is not None and error is not None:
+                    callback_result = fn(success, error)
+                elif error is not None:
+                    callback_result = fn(error)
+                elif success is not None:
+                    callback_result = fn(success)
+
+        try:
+            if callback['updates_result'] is True:
+                result = callback_result
+        except KeyError:
+            pass
+
+    return result
+
+
 def _make_runium_param(iterations, times):
     """
     Creates and returns a dict with runium specific stats and functions that
@@ -228,3 +266,11 @@ def _make_runium_param(iterations, times):
         'iterations_remaining': times - iterations
     }
     return context
+
+
+def _stop_task():
+    pass
+
+
+def _repeat_task(times, every):
+    pass
