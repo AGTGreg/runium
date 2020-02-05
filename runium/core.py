@@ -102,12 +102,14 @@ class Task(object):
     ):
         if fn is not None:
             self.__callbacks[callback_type] = {
-                'fn': fn, 'updates_result': updates_result,
+                'fn': fn, 
+                'updates_result': updates_result,
                 'type': callback_type
             }
         elif stop_task is True:
             self.__callbacks[callback_type] = {
-                'stop_task': True
+                'stop_task': True,
+                'type': callback_type
             }
         elif repeat_task is not None:
             # times is mandatory, every is not
@@ -115,10 +117,15 @@ class Task(object):
             try:
                 every = repeat_task['every']
             except KeyError:
-                every = None
+                every = 0
             self.__callbacks[callback_type] = {
-                'fn': _repeat_task(times, every),
-                'updates_result': updates_result,
+                'fn': _repeat_task,
+                'repeat_args': {
+                    'fn': self.__fn,
+                    'kwargs': self.__kwargs,
+                    'times': times,
+                    'interval': every
+                },
                 'type': callback_type
             }
         else:
@@ -182,7 +189,7 @@ def _run_task(
             task_result = _run_callback(
                 callbacks[CT.ON_SUCCESS], success=task_success,
                 result=task_result)
-        if task_error is not None:
+        else:
             task_result = _run_callback(
                 callbacks[CT.ON_ERROR], error=task_error, result=task_result)
 
@@ -239,12 +246,10 @@ def _run_callback(callback, success=None, error=None, result=None):
     callback_result = None
 
     if callback is not None:
-        fn = None
+        fn = callback['fn']
         try:
-            fn = callback['fn']
+            repeat_args = callback['repeat_args']
         except KeyError:
-            pass
-        else:
             cl_type = callback['type']
             if fn is not None:
                 if cl_type == CT.ON_FINISHED:
@@ -253,6 +258,9 @@ def _run_callback(callback, success=None, error=None, result=None):
                     callback_result = fn(error)
                 elif cl_type == CT.ON_SUCCESS:
                     callback_result = fn(success)
+        else:
+            print('Repeating...')
+            callback_result = fn(**repeat_args)
 
         try:
             if callback['updates_result'] is True:
@@ -279,5 +287,30 @@ def _stop_task():
     pass
 
 
-def _repeat_task(times, every):
-    pass
+def _repeat_task(fn, kwargs, times, interval):
+    """
+    This is a light version of _run_task that we use to repeat it in a
+    callback.
+    It stops when the task is executed successfully or when it has been
+    executed :times times.
+    """
+    task_result = None
+    iterations = 0
+
+    next_time = time.time() + interval
+    while True:
+        iterations += 1
+
+        # This is where the task is executed and we get its result.
+        try:
+            task_result = fn(**kwargs)
+            break
+        except Exception:
+            if times > 0 and iterations >= times:
+                break
+            if interval > 0:
+                next_time +=\
+                    (time.time() - next_time) // interval * interval + interval
+                time.sleep(max(0, next_time - time.time()))
+
+    return task_result
